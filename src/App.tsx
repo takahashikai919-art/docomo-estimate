@@ -1798,7 +1798,7 @@ export default function App() {
 
           <div
             className="
-            h-[120px]
+            h-[100px]
             px-6
             border-t
             bg-purple-50
