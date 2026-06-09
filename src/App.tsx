@@ -1821,12 +1821,12 @@ export default function App() {
               <div className="text-right">
                 <div className="text-2xl font-black text-purple-700">
                   ¥{grandTotal.toLocaleString()}
-                  <span className="ml-2 text-lg font-bold">（1〜23回）</span>
+                  <span className="ml-2 text-xs font-bold">（1〜23回）</span>
                 </div>
 
                 <div className="mt-3 text-2xl font-black text-purple-700">
                   ¥{grandTotalSecond.toLocaleString()}
-                  <span className="ml-2 text-lg font-bold">（24〜48回）</span>
+                  <span className="ml-2 text-xs font-bold">（24〜48回）</span>
                 </div>
               </div>
             ) : (
