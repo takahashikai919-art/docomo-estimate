@@ -1187,9 +1187,10 @@ export default function App() {
                     <div
                       key={index}
                       className="
-          flex
-          gap-2
-        "
+    flex
+    flex-wrap
+    gap-2
+  "
                     >
                       {/* 名前 */}
 
@@ -1797,7 +1798,7 @@ export default function App() {
 
           <div
             className="
-            h-[100px]
+            h-[120px]
             px-6
             border-t
             bg-purple-50
@@ -1808,7 +1809,7 @@ export default function App() {
           >
             <div
               className="
-              text-2xl
+              text-xl
               font-bold
               text-purple-700
             "
