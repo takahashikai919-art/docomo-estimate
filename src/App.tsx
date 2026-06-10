@@ -1250,8 +1250,8 @@ export default function App() {
                           setLines(updated);
                         }}
                         className="
-            w-[25px]
-            h-[25px]
+            w-[15px]
+            h-[15px]
             rounded-xl
             border
             border-red-400
@@ -1569,8 +1569,8 @@ export default function App() {
                       setLines(updated);
                     }}
                     className="
-                w-[25px]
-                h-[25px]
+                w-[15px]
+                h-[15px]
                 rounded-xl
                 border
                 border-red-400
@@ -1746,8 +1746,8 @@ export default function App() {
                       setLines(updated);
                     }}
                     className="
-          w-[25px]
-          h-[25px]
+          w-[15px]
+          h-[15px]
           rounded-xl
           border
           border-red-400
