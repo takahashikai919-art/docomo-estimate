@@ -1489,7 +1489,7 @@ export default function App() {
                         }}
                       />
 
-                      <div className="text-base">{discount.name}</div>
+                      <div className="text-sm">{discount.name}</div>
                     </div>
 
                     <div
