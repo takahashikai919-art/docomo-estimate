@@ -670,7 +670,7 @@ export default function App() {
       <div
         className="
         grid
-        grid-cols-[0.9fr_1.1fr_1fr_1fr]
+        grid-cols-4
         rounded-2xl
         overflow-hidden
         border
@@ -686,8 +686,7 @@ export default function App() {
   justify-between
   border-r
   min-h-[720px]
-  max-w-[95%]
-"
+  "
         >
           <div>
             <div
@@ -705,7 +704,7 @@ export default function App() {
 
               <div
                 className="
-        text-2xl
+        text-xl
         font-bold
         text-red-700
       "
@@ -743,10 +742,10 @@ export default function App() {
                   }}
                   className="
             w-full
-            h-[44px]
+            h-[40px]
             rounded-xl
             border
-            px-4
+            px-3
             text-base
             bg-white
           "
@@ -878,7 +877,7 @@ export default function App() {
                       <div
                         className="
         mb-1
-        text-base
+        text-sm
         font-bold
       "
                       >
@@ -906,7 +905,7 @@ export default function App() {
           rounded-xl
           border
           px-4
-          text-base
+          text-sm
           bg-white
         "
                       />
@@ -918,7 +917,7 @@ export default function App() {
                       <div
                         className="
         mb-1
-        text-base
+        text-sm
         font-bold
       "
                       >
@@ -946,7 +945,7 @@ export default function App() {
           rounded-xl
           border
           px-4
-          text-base
+          text-sm
           bg-white
         "
                       />
@@ -958,7 +957,7 @@ export default function App() {
                       <div
                         className="
         mb-1
-        text-base
+        text-sm
         font-bold
       "
                       >
@@ -986,7 +985,7 @@ export default function App() {
           rounded-xl
           border
           px-4
-          text-base
+          text-sm
           bg-white
         "
                       />
