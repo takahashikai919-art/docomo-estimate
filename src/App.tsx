@@ -670,7 +670,7 @@ export default function App() {
       <div
         className="
         grid
-        grid-cols-4
+        grid-cols-[0.9fr_1fr_1fr_1fr]
         rounded-2xl
         overflow-hidden
         border
@@ -1250,8 +1250,8 @@ export default function App() {
                           setLines(updated);
                         }}
                         className="
-            w-[15px]
-            h-[15px]
+            w-[20px]
+            h-[20px]
             rounded-xl
             border
             border-red-400
@@ -1569,8 +1569,8 @@ export default function App() {
                       setLines(updated);
                     }}
                     className="
-                w-[15px]
-                h-[15px]
+                w-[20px]
+                h-[20px]
                 rounded-xl
                 border
                 border-red-400
@@ -1746,8 +1746,8 @@ export default function App() {
                       setLines(updated);
                     }}
                     className="
-          w-[15px]
-          h-[15px]
+          w-[20px]
+          h-[20px]
           rounded-xl
           border
           border-red-400
