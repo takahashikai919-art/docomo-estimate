@@ -670,7 +670,7 @@ export default function App() {
       <div
         className="
         grid
-        grid-cols-4
+        grid-cols-[0.9fr_1.1fr_1fr_1fr]
         rounded-2xl
         overflow-hidden
         border
