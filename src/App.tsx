@@ -1187,10 +1187,10 @@ export default function App() {
                     <div
                       key={index}
                       className="
-    flex
-    flex-wrap
-    gap-2
-  "
+                      flex
+                      items-center
+                      gap-2
+                    "
                     >
                       {/* 名前 */}
 
@@ -1569,6 +1569,7 @@ export default function App() {
                       setLines(updated);
                     }}
                     className="
+                ml-1    
                 w-[20px]
                 h-[20px]
                 rounded-xl
