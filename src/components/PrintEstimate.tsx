@@ -487,16 +487,16 @@ h2 {
         </div>
         <div
           className="
-          mt-10
-          flex
-          justify-center
-          gap-4
-          no-print
-        "
-        ></div>
-        <button
-          onClick={() => window.print()}
-          className="
+    mt-10
+    flex
+    justify-center
+    gap-4
+    no-print
+  "
+        >
+          <button
+            onClick={() => window.print()}
+            className="
       rounded-lg
       bg-blue-600
       px-6
@@ -504,22 +504,23 @@ h2 {
       text-white
       font-bold
     "
-        >
-          印刷
-        </button>
+          >
+            印刷
+          </button>
 
-        <button
-          onClick={onClose}
-          className="
+          <button
+            onClick={onClose}
+            className="
       rounded-lg
       border
       px-6
       py-3
       font-bold
     "
-        >
-          閉じる
-        </button>
+          >
+            閉じる
+          </button>
+        </div>
       </div>
     </div>
   );
