@@ -485,7 +485,15 @@ h2 {
             </tbody>
           </table>
         </div>
-
+        <div
+          className="
+          mt-10
+          flex
+          justify-center
+          gap-4
+          no-print
+        "
+        ></div>
         <button
           onClick={() => window.print()}
           className="
