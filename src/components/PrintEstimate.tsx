@@ -34,6 +34,8 @@ type Props = {
   secondPayment: number;
 
   installment: number;
+
+  grandTotalSecond: number;
 };
 
 export default function PrintEstimate({
@@ -54,6 +56,7 @@ export default function PrintEstimate({
   installmentPrice,
   discountTotal,
   grandTotal,
+  grandTotalSecond,
 
   isKaedoki,
   firstPayment,
@@ -409,9 +412,23 @@ h2 {
                 <td className="border border-r p-3 font-bold text-xl">合計</td>
 
                 <td colSpan={2} className="border p-3 text-center">
-                  <div className="text-3xl font-black">
-                    ¥{grandTotal.toLocaleString()}
-                  </div>
+                  {isKaedoki ? (
+                    <>
+                      <div className="text-2xl font-black">
+                        ¥{grandTotal.toLocaleString()}
+                        <span className="ml-2 text-sm">（1〜23回）</span>
+                      </div>
+
+                      <div className="mt-2 text-2xl font-black">
+                        ¥{grandTotalSecond.toLocaleString()}
+                        <span className="ml-2 text-sm">（24〜48回）</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-3xl font-black">
+                      ¥{grandTotal.toLocaleString()}
+                    </div>
+                  )}
                 </td>
               </tr>
             </tbody>
@@ -471,13 +488,6 @@ h2 {
 
         <div className="mt-6">
           <h2 className="text-lg font-bold mb-2">備考</h2>
-
-          <div
-            className="
-      border
-      min-h-[50px]
-    "
-          />
         </div>
 
         <div

@@ -338,6 +338,7 @@ export default function App() {
         installmentPrice={installmentPrice}
         discountTotal={discountTotal}
         grandTotal={grandTotal}
+        grandTotalSecond={grandTotalSecond}
         onClose={() => setShowPrintPreview(false)}
         isKaedoki={isKaedoki}
         firstPayment={lines[activeTab].firstPayment}
