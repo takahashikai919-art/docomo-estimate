@@ -35,6 +35,11 @@ export default function App() {
       name: "ドコモmini 10GB",
       price: 3850,
     },
+
+    {
+      name: "旧プラン・自由入力",
+      price: 0,
+    },
   ];
 
   const discountsByPlan: Record<
@@ -167,36 +172,8 @@ export default function App() {
       secondPayment: 0,
       mailCarry: false,
 
-      customOptions: [] as {
-        name: string;
-        price: number;
-      }[],
-      customDiscounts: [] as {
-        name: string;
-        price: number;
-      }[],
-      customFees: [] as {
-        name: string;
-        price: number;
-      }[],
-    },
-
-    {
-      deviceName: "",
-      devicePrice: 0,
-      selectedPlan: plans[0],
-
-      selectedDiscounts: [] as string[],
-
-      dcardDiscount: "",
-      longTermDiscount: "",
-
-      downPayment: 16500,
-
-      firstPayment: 0,
-      residualPrice: 0,
-      secondPayment: 0,
-      mailCarry: false,
+      customPlanName: "",
+      customPlanPrice: 0,
 
       customOptions: [] as {
         name: string;
@@ -228,6 +205,43 @@ export default function App() {
       residualPrice: 0,
       secondPayment: 0,
       mailCarry: false,
+
+      customPlanName: "",
+      customPlanPrice: 0,
+
+      customOptions: [] as {
+        name: string;
+        price: number;
+      }[],
+      customDiscounts: [] as {
+        name: string;
+        price: number;
+      }[],
+      customFees: [] as {
+        name: string;
+        price: number;
+      }[],
+    },
+
+    {
+      deviceName: "",
+      devicePrice: 0,
+      selectedPlan: plans[0],
+
+      selectedDiscounts: [] as string[],
+
+      dcardDiscount: "",
+      longTermDiscount: "",
+
+      downPayment: 16500,
+
+      firstPayment: 0,
+      residualPrice: 0,
+      secondPayment: 0,
+      mailCarry: false,
+
+      customPlanName: "",
+      customPlanPrice: 0,
 
       customOptions: [] as {
         name: string;
@@ -275,11 +289,18 @@ export default function App() {
     lines[activeTab].selectedPlan.name === "ドコモmini 4GB" ||
     lines[activeTab].selectedPlan.name === "ドコモmini 10GB";
 
+  const isCustomPlan =
+    lines[activeTab].selectedPlan.name === "旧プラン・自由入力";
+
+  const planPrice = isCustomPlan
+    ? lines[activeTab].customPlanPrice
+    : lines[activeTab].selectedPlan.price;
+
   const optionTotal =
     lines[activeTab].customOptions.reduce(
       (sum, option) => sum + option.price,
       0,
-    ) + (lines[activeTab].mailCarry ? 330 : 0);
+    ) + (!isCustomPlan && lines[activeTab].mailCarry ? 330 : 0);
 
   const discountTotal =
     (discountsByPlan[lines[activeTab].selectedPlan.name] || []).reduce(
@@ -346,18 +367,12 @@ export default function App() {
   const grandTotal = Math.max(
     0,
 
-    installmentPrice +
-      lines[activeTab].selectedPlan.price +
-      optionTotal -
-      discountTotal,
+    installmentPrice + planPrice + optionTotal - discountTotal,
   );
 
   const grandTotalSecond = Math.max(
     0,
-    lines[activeTab].secondPayment +
-      lines[activeTab].selectedPlan.price +
-      optionTotal -
-      discountTotal,
+    lines[activeTab].secondPayment + planPrice + optionTotal - discountTotal,
   );
 
   if (showPrintPreview) {
@@ -366,7 +381,11 @@ export default function App() {
         storeName={storeName}
         staffName={staffName}
         deviceName={lines[activeTab].deviceName}
-        planName={lines[activeTab].selectedPlan.name}
+        planName={
+          isCustomPlan
+            ? lines[activeTab].customPlanName
+            : lines[activeTab].selectedPlan.name
+        }
         devicePrice={lines[activeTab].devicePrice}
         options={lines[activeTab].customOptions}
         mailCarry={lines[activeTab].mailCarry}
@@ -552,6 +571,9 @@ export default function App() {
                   secondPayment: 0,
 
                   mailCarry: false,
+
+                  customPlanName: "",
+                  customPlanPrice: 0,
 
                   customOptions: [],
                   customDiscounts: [],
@@ -853,34 +875,34 @@ export default function App() {
           "
                 />
               </div>
-
-              <div>
-                <div
-                  className="
+              {installment !== 0 && installment !== 1 && (
+                <div>
+                  <div
+                    className="
     mb-1
     text-base
     font-bold
   "
-                >
-                  頭金
-                </div>
+                  >
+                    頭金
+                  </div>
 
-                <input
-                  type="number"
-                  value={
-                    lines[activeTab].downPayment === 0
-                      ? ""
-                      : lines[activeTab].downPayment
-                  }
-                  onChange={(e) => {
-                    const updated = [...lines];
+                  <input
+                    type="number"
+                    value={
+                      lines[activeTab].downPayment === 0
+                        ? ""
+                        : lines[activeTab].downPayment
+                    }
+                    onChange={(e) => {
+                      const updated = [...lines];
 
-                    updated[activeTab].downPayment =
-                      e.target.value === "" ? 0 : Number(e.target.value);
+                      updated[activeTab].downPayment =
+                        e.target.value === "" ? 0 : Number(e.target.value);
 
-                    setLines(updated);
-                  }}
-                  className="
+                      setLines(updated);
+                    }}
+                    className="
     w-full
     h-[44px]
     rounded-xl
@@ -889,9 +911,9 @@ export default function App() {
     text-base
     bg-white
   "
-                />
-              </div>
-
+                  />
+                </div>
+              )}
               <div>
                 <div
                   className="
@@ -1182,7 +1204,31 @@ export default function App() {
 
                     const updated = [...lines];
 
+                    const currentPlan = updated[activeTab].selectedPlan.name;
+
+                    const wasCustom = currentPlan === "旧プラン・自由入力";
+
+                    const willBeCustom = found.name === "旧プラン・自由入力";
+
                     updated[activeTab].selectedPlan = found;
+
+                    if (!found.name.includes("ドコモmini")) {
+                      updated[activeTab].mailCarry = false;
+                    }
+
+                    if (wasCustom !== willBeCustom) {
+                      updated[activeTab].mailCarry = false;
+
+                      updated[activeTab].selectedDiscounts = [];
+
+                      updated[activeTab].dcardDiscount = "";
+
+                      updated[activeTab].longTermDiscount = "";
+
+                      updated[activeTab].customOptions = [];
+
+                      updated[activeTab].customDiscounts = [];
+                    }
 
                     setLines(updated);
                   }}
@@ -1202,6 +1248,51 @@ export default function App() {
                     </option>
                   ))}
                 </select>
+                {isCustomPlan && (
+                  <div className="mt-3 space-y-2">
+                    <input
+                      type="text"
+                      placeholder="プラン名"
+                      value={lines[activeTab].customPlanName}
+                      onChange={(e) => {
+                        const updated = [...lines];
+                        updated[activeTab].customPlanName = e.target.value;
+                        setLines(updated);
+                      }}
+                      className="
+        w-full
+        h-[44px]
+        rounded-xl
+        border
+        px-4
+      "
+                    />
+
+                    <input
+                      type="number"
+                      placeholder="基本料金"
+                      value={
+                        lines[activeTab].customPlanPrice === 0
+                          ? ""
+                          : lines[activeTab].customPlanPrice
+                      }
+                      onChange={(e) => {
+                        const updated = [...lines];
+                        updated[activeTab].customPlanPrice =
+                          e.target.value === "" ? 0 : Number(e.target.value);
+
+                        setLines(updated);
+                      }}
+                      className="
+        w-full
+        h-[44px]
+        rounded-xl
+        border
+        px-4
+      "
+                    />
+                  </div>
+                )}
               </div>
 
               <div
@@ -1216,11 +1307,7 @@ export default function App() {
                 <div className="font-medium">基本料</div>
 
                 <div className="font-bold">
-                  ¥
-                  {Math.max(
-                    0,
-                    lines[activeTab].selectedPlan.price,
-                  ).toLocaleString()}
+                  ¥{Math.max(0, planPrice).toLocaleString()}
                 </div>
               </div>
 
@@ -1233,7 +1320,7 @@ export default function App() {
                 オプション
               </div>
 
-              {isMiniPlan && (
+              {isMiniPlan && !isCustomPlan && (
                 <div
                   className="
       flex
@@ -1429,11 +1516,7 @@ export default function App() {
               text-blue-600
             "
             >
-              ¥
-              {Math.max(
-                0,
-                lines[activeTab].selectedPlan.price + optionTotal,
-              ).toLocaleString()}
+              ¥{Math.max(0, planPrice + optionTotal).toLocaleString()}
             </div>
           </div>
         </div>
@@ -1479,28 +1562,30 @@ export default function App() {
         gap-4
       "
             >
-              {/* dカード割 */}
-              <div>
-                <div
-                  className="
+              {!isCustomPlan && (
+                <>
+                  {/* dカード割 */}
+                  <div>
+                    <div
+                      className="
             mb-1
             text-sm
             font-bold
           "
-                >
-                  dカード支払割
-                </div>
+                    >
+                      dカード支払割
+                    </div>
 
-                <select
-                  value={lines[activeTab].dcardDiscount}
-                  onChange={(e) => {
-                    const updated = [...lines];
+                    <select
+                      value={lines[activeTab].dcardDiscount}
+                      onChange={(e) => {
+                        const updated = [...lines];
 
-                    updated[activeTab].dcardDiscount = e.target.value;
+                        updated[activeTab].dcardDiscount = e.target.value;
 
-                    setLines(updated);
-                  }}
-                  className="
+                        setLines(updated);
+                      }}
+                      className="
             w-full
             h-[38px]
             rounded-xl
@@ -1508,38 +1593,40 @@ export default function App() {
             px-3
             text-sm
           "
-                >
-                  <option value="">選択なし</option>
+                    >
+                      <option value="">選択なし</option>
 
-                  <option value="220">dカード（220円）</option>
+                      <option value="220">dカード（220円）</option>
 
-                  <option value="550">GOLD / PLATINUM（550円）</option>
-                </select>
-              </div>
-              {/* 長期利用割 */}
+                      <option value="550">GOLD / PLATINUM（550円）</option>
+                    </select>
+                  </div>
+                  {/* 長期利用割 */}
 
-              {!lines[activeTab].selectedPlan.name.includes("ドコモmini") && (
-                <div>
-                  <div
-                    className="
+                  {!lines[activeTab].selectedPlan.name.includes(
+                    "ドコモmini",
+                  ) && (
+                    <div>
+                      <div
+                        className="
         mb-1
         text-sm
         font-bold
       "
-                  >
-                    長期利用割
-                  </div>
+                      >
+                        長期利用割
+                      </div>
 
-                  <select
-                    value={lines[activeTab].longTermDiscount}
-                    onChange={(e) => {
-                      const updated = [...lines];
+                      <select
+                        value={lines[activeTab].longTermDiscount}
+                        onChange={(e) => {
+                          const updated = [...lines];
 
-                      updated[activeTab].longTermDiscount = e.target.value;
+                          updated[activeTab].longTermDiscount = e.target.value;
 
-                      setLines(updated);
-                    }}
-                    className="
+                          setLines(updated);
+                        }}
+                        className="
         w-full
         h-[38px]
         rounded-xl
@@ -1547,78 +1634,80 @@ export default function App() {
         px-3
         text-sm
       "
-                  >
-                    <option value="">選択なし</option>
+                      >
+                        <option value="">選択なし</option>
 
-                    <option value="110">10年以上（110円）</option>
+                        <option value="110">10年以上（110円）</option>
 
-                    <option value="220">20年以上（220円）</option>
-                  </select>
-                </div>
-              )}
-              {/* 固定割引 */}
-              {(discountsByPlan[lines[activeTab].selectedPlan.name] || []).map(
-                (discount: { name: string; price: number }) => (
-                  <label
-                    key={discount.name}
-                    className="
+                        <option value="220">20年以上（220円）</option>
+                      </select>
+                    </div>
+                  )}
+                  {/* 固定割引 */}
+                  {(
+                    discountsByPlan[lines[activeTab].selectedPlan.name] || []
+                  ).map((discount: { name: string; price: number }) => (
+                    <label
+                      key={discount.name}
+                      className="
               flex
               items-center
               justify-between
             "
-                  >
-                    <div
-                      className="
+                    >
+                      <div
+                        className="
                 flex
                 items-center
                 gap-4
               "
-                    >
-                      <input
-                        type="checkbox"
-                        className="
+                      >
+                        <input
+                          type="checkbox"
+                          className="
                   w-5
                   h-5
                 "
-                        checked={lines[activeTab].selectedDiscounts.includes(
-                          discount.name,
-                        )}
-                        onChange={(e) => {
-                          const updated = [...lines];
+                          checked={lines[activeTab].selectedDiscounts.includes(
+                            discount.name,
+                          )}
+                          onChange={(e) => {
+                            const updated = [...lines];
 
-                          if (e.target.checked) {
-                            updated[activeTab].selectedDiscounts = [
-                              ...updated[activeTab].selectedDiscounts,
+                            if (e.target.checked) {
+                              updated[activeTab].selectedDiscounts = [
+                                ...updated[activeTab].selectedDiscounts,
 
-                              discount.name,
-                            ];
-                          } else {
-                            updated[activeTab].selectedDiscounts = updated[
-                              activeTab
-                            ].selectedDiscounts.filter(
-                              (name) => name !== discount.name,
-                            );
-                          }
+                                discount.name,
+                              ];
+                            } else {
+                              updated[activeTab].selectedDiscounts = updated[
+                                activeTab
+                              ].selectedDiscounts.filter(
+                                (name) => name !== discount.name,
+                              );
+                            }
 
-                          setLines(updated);
-                        }}
-                      />
+                            setLines(updated);
+                          }}
+                        />
 
-                      <div className="text-sm">{discount.name}</div>
-                    </div>
+                        <div className="text-sm">{discount.name}</div>
+                      </div>
 
-                    <div
-                      className="
+                      <div
+                        className="
                 text-xl
                 font-bold
                 text-green-700
               "
-                    >
-                      -¥
-                      {discount.price.toLocaleString()}
-                    </div>
-                  </label>
-                ),
+                      >
+                        -¥
+                        {discount.price.toLocaleString()}
+                      </div>
+                    </label>
+                  ))}
+                </>
               )}
               {/* カスタム割引 */}
               {lines[activeTab].customDiscounts.map((discount, index) => (
