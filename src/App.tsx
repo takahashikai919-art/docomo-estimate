@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Smartphone, Database, Tag, Wallet, Menu, X } from "lucide-react";
 
@@ -136,6 +136,7 @@ export default function App() {
       },
     ],
   };
+
   const [installment, setInstallment] = useState(24);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -164,6 +165,7 @@ export default function App() {
       firstPayment: 0,
       residualPrice: 0,
       secondPayment: 0,
+      mailCarry: false,
 
       customOptions: [] as {
         name: string;
@@ -194,6 +196,7 @@ export default function App() {
       firstPayment: 0,
       residualPrice: 0,
       secondPayment: 0,
+      mailCarry: false,
 
       customOptions: [] as {
         name: string;
@@ -224,6 +227,7 @@ export default function App() {
       firstPayment: 0,
       residualPrice: 0,
       secondPayment: 0,
+      mailCarry: false,
 
       customOptions: [] as {
         name: string;
@@ -240,10 +244,42 @@ export default function App() {
     },
   ]);
 
-  const optionTotal = lines[activeTab].customOptions.reduce(
-    (sum, option) => sum + option.price,
-    0,
-  );
+  useEffect(() => {
+    const saved = localStorage.getItem("docomo-estimate");
+
+    if (!saved) return;
+
+    const data = JSON.parse(saved);
+
+    if (data.installment !== undefined) {
+      setInstallment(data.installment);
+    }
+    if (data.storeName) setStoreName(data.storeName);
+    if (data.staffName) setStaffName(data.staffName);
+    if (data.lines) setLines(data.lines);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "docomo-estimate",
+      JSON.stringify({
+        installment,
+        storeName,
+        staffName,
+        lines,
+      }),
+    );
+  }, [installment, storeName, staffName, lines]);
+
+  const isMiniPlan =
+    lines[activeTab].selectedPlan.name === "ドコモmini 4GB" ||
+    lines[activeTab].selectedPlan.name === "ドコモmini 10GB";
+
+  const optionTotal =
+    lines[activeTab].customOptions.reduce(
+      (sum, option) => sum + option.price,
+      0,
+    ) + (lines[activeTab].mailCarry ? 330 : 0);
 
   const discountTotal =
     (discountsByPlan[lines[activeTab].selectedPlan.name] || []).reduce(
@@ -333,6 +369,7 @@ export default function App() {
         planName={lines[activeTab].selectedPlan.name}
         devicePrice={lines[activeTab].devicePrice}
         options={lines[activeTab].customOptions}
+        mailCarry={lines[activeTab].mailCarry}
         discounts={estimateDiscounts}
         optionTotal={optionTotal}
         installmentPrice={installmentPrice}
@@ -349,6 +386,7 @@ export default function App() {
       />
     );
   }
+  console.log(localStorage.getItem("docomo-lines"));
   return (
     <div
       id="app-root"
@@ -416,7 +454,7 @@ export default function App() {
         mb-6
       "
       >
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-1">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="
@@ -491,6 +529,72 @@ export default function App() {
               )}
             </div>
           ))}
+
+          <button
+            onClick={() => {
+              setLines([
+                ...lines,
+
+                {
+                  deviceName: "",
+                  devicePrice: 0,
+                  selectedPlan: plans[0],
+
+                  selectedDiscounts: [],
+
+                  dcardDiscount: "",
+                  longTermDiscount: "",
+
+                  downPayment: 16500,
+
+                  firstPayment: 0,
+                  residualPrice: 0,
+                  secondPayment: 0,
+
+                  mailCarry: false,
+
+                  customOptions: [],
+                  customDiscounts: [],
+                  customFees: [],
+                },
+              ]);
+            }}
+            className="
+       h-[44px]
+    px-3
+    rounded-xl
+    border
+    border-dashed
+    bg-white
+    font-bold
+    whitespace-nowrap
+  "
+          >
+            ＋
+          </button>
+
+          <button
+            onClick={() => {
+              if (!confirm("見積内容をすべて削除しますか？")) return;
+
+              localStorage.removeItem("docomo-estimate");
+
+              window.location.reload();
+            }}
+            className="
+    ml-auto
+    h-[44px]
+    px-4
+    rounded-xl
+    border
+    border-red-400
+    text-red-600
+    font-bold
+    bg-white
+  "
+          >
+            🗑 リセット
+          </button>
 
           <div
             className={`
@@ -622,47 +726,6 @@ export default function App() {
               onClick={() => setIsMenuOpen(false)}
             />
           )}
-
-          <button
-            onClick={() => {
-              setLines([
-                ...lines,
-
-                {
-                  deviceName: "",
-                  devicePrice: 0,
-                  selectedPlan: plans[0],
-
-                  selectedDiscounts: [] as string[],
-
-                  dcardDiscount: "",
-                  longTermDiscount: "",
-
-                  downPayment: 16500,
-
-                  firstPayment: 0,
-                  residualPrice: 0,
-                  secondPayment: 0,
-
-                  customOptions: [],
-                  customDiscounts: [],
-                  customFees: [],
-                },
-              ]);
-            }}
-            className="
-       h-[44px]
-    px-3
-    rounded-xl
-    border
-    border-dashed
-    bg-white
-    font-bold
-    whitespace-nowrap
-  "
-          >
-            ＋
-          </button>
         </div>
       </div>
 
@@ -1170,6 +1233,57 @@ export default function App() {
                 オプション
               </div>
 
+              {isMiniPlan && (
+                <div
+                  className="
+      flex
+      items-center
+      justify-between
+    "
+                >
+                  <label
+                    className="
+        flex
+        items-center
+        gap-3
+        cursor-pointer
+      "
+                  >
+                    <input
+                      type="checkbox"
+                      checked={lines[activeTab].mailCarry}
+                      onChange={(e) => {
+                        const updated = [...lines];
+
+                        updated[activeTab].mailCarry = e.target.checked;
+
+                        setLines(updated);
+                      }}
+                      className="
+          w-5
+          h-5
+        "
+                    />
+
+                    <span
+                      className="
+          text-base
+        "
+                    >
+                      ドコモメール持ち運び
+                    </span>
+                  </label>
+
+                  <span
+                    className="
+        font-bold
+        text-xl
+      "
+                  >
+                    ¥330
+                  </span>
+                </div>
+              )}
               <div
                 className="
                 flex

@@ -36,6 +36,8 @@ type Props = {
   installment: number;
 
   grandTotalSecond: number;
+
+  mailCarry: boolean;
 };
 
 export default function PrintEstimate({
@@ -65,10 +67,25 @@ export default function PrintEstimate({
 
   installment,
 
+  mailCarry,
+
   onClose,
 }: Props) {
   const isNoDevice = installment === 0;
   const isLumpSum = installment === 1;
+
+  const displayOptions = [
+    ...(mailCarry
+      ? [
+          {
+            name: "ドコモメール持ち運び",
+            price: 330,
+          },
+        ]
+      : []),
+
+    ...options,
+  ];
 
   return (
     <div
@@ -221,15 +238,15 @@ h2 {
 
               {/* オプション */}
 
-              {options.length === 0 ? (
+              {displayOptions.length === 0 ? (
                 <tr>
                   <td
                     className="
-      border
-      border-t
-      p-3
-      align-top
-    "
+        border
+        border-t
+        p-3
+        align-top
+      "
                   >
                     オプション料(計)
                     <div className="mt-4">¥{optionTotal.toLocaleString()}</div>
@@ -237,10 +254,10 @@ h2 {
 
                   <td
                     className="
-    border
-    border-t
-    p-3
-  "
+        border
+        border-t
+        p-3
+      "
                   >
                     -
                   </td>
@@ -248,11 +265,11 @@ h2 {
                   <td className="border p-3">なし</td>
                 </tr>
               ) : (
-                options.map((option, index) => (
+                displayOptions.map((option, index) => (
                   <tr key={index} className={index === 0 ? "border-t" : ""}>
                     {index === 0 && (
                       <td
-                        rowSpan={options.length}
+                        rowSpan={displayOptions.length}
                         className="border border-r p-3 align-top"
                       >
                         <div className="font-bold">◇オプション料(計)</div>
