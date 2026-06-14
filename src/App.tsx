@@ -270,7 +270,19 @@ export default function App() {
     }
     if (data.storeName) setStoreName(data.storeName);
     if (data.staffName) setStaffName(data.staffName);
-    if (data.lines) setLines(data.lines);
+    if (data.lines) {
+      const fixedLines = data.lines.map((line: any) => ({
+        ...line,
+
+        mailCarry: line.mailCarry ?? false,
+
+        customPlanName: line.customPlanName ?? "",
+
+        customPlanPrice: line.customPlanPrice ?? 0,
+      }));
+
+      setLines(fixedLines);
+    }
   }, []);
 
   useEffect(() => {
