@@ -730,6 +730,20 @@ export default function App() {
     py-2
   "
               >
+                ドコモキャンペーン一覧
+              </button>
+              <button
+                onClick={() =>
+                  window.open(
+                    "https://www.docomo.ne.jp/campaign_event/",
+                    "_blank",
+                  )
+                }
+                className="
+    text-left
+    py-2
+  "
+              >
                 dカード比較アプリ
               </button>
               <button
