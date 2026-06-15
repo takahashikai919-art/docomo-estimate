@@ -142,8 +142,6 @@ export default function App() {
     ],
   };
 
-  const [installment, setInstallment] = useState(24);
-
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [storeName, setStoreName] = useState("");
@@ -158,6 +156,7 @@ export default function App() {
     {
       deviceName: "",
       devicePrice: 0,
+      installment: 24,
       selectedPlan: plans[0],
 
       selectedDiscounts: [] as string[],
@@ -192,6 +191,7 @@ export default function App() {
     {
       deviceName: "",
       devicePrice: 0,
+      installment: 24,
       selectedPlan: plans[0],
 
       selectedDiscounts: [] as string[],
@@ -226,6 +226,7 @@ export default function App() {
     {
       deviceName: "",
       devicePrice: 0,
+      installment: 24,
       selectedPlan: plans[0],
 
       selectedDiscounts: [] as string[],
@@ -265,9 +266,6 @@ export default function App() {
 
     const data = JSON.parse(saved);
 
-    if (data.installment !== undefined) {
-      setInstallment(data.installment);
-    }
     if (data.storeName) setStoreName(data.storeName);
     if (data.staffName) setStaffName(data.staffName);
     if (data.lines) {
@@ -279,6 +277,8 @@ export default function App() {
         customPlanName: line.customPlanName ?? "",
 
         customPlanPrice: line.customPlanPrice ?? 0,
+
+        installment: line.installment ?? 24,
       }));
 
       setLines(fixedLines);
@@ -289,13 +289,12 @@ export default function App() {
     localStorage.setItem(
       "docomo-estimate",
       JSON.stringify({
-        installment,
         storeName,
         staffName,
         lines,
       }),
     );
-  }, [installment, storeName, staffName, lines]);
+  }, [storeName, staffName, lines]);
 
   const isMiniPlan =
     lines[activeTab].selectedPlan.name === "ドコモmini 4GB" ||
@@ -359,9 +358,9 @@ export default function App() {
     ...lines[activeTab].customDiscounts,
   ];
 
-  const isNoDevice = installment === 0;
-  const isLumpSum = installment === 1;
-  const isKaedoki = installment === 23;
+  const isNoDevice = lines[activeTab].installment === 0;
+  const isLumpSum = lines[activeTab].installment === 1;
+  const isKaedoki = lines[activeTab].installment === 23;
 
   const installmentPrice =
     isNoDevice || isLumpSum
@@ -372,7 +371,7 @@ export default function App() {
             0,
             Math.trunc(
               (lines[activeTab].devicePrice - lines[activeTab].downPayment) /
-                installment,
+                lines[activeTab].installment,
             ),
           );
 
@@ -412,7 +411,7 @@ export default function App() {
         firstPayment={lines[activeTab].firstPayment}
         residualPrice={lines[activeTab].residualPrice}
         secondPayment={lines[activeTab].secondPayment}
-        installment={installment}
+        installment={lines[activeTab].installment}
         fees={lines[activeTab].customFees}
       />
     );
@@ -569,6 +568,7 @@ export default function App() {
                 {
                   deviceName: "",
                   devicePrice: 0,
+                  installment: 24,
                   selectedPlan: plans[0],
 
                   selectedDiscounts: [],
@@ -721,7 +721,7 @@ export default function App() {
               <button
                 onClick={() =>
                   window.open(
-                    "https://docomo-simulator.vercel.app/?utm_source=chatgpt.com",
+                    "https://www.docomo.ne.jp/campaign_event/",
                     "_blank",
                   )
                 }
@@ -735,7 +735,7 @@ export default function App() {
               <button
                 onClick={() =>
                   window.open(
-                    "https://www.docomo.ne.jp/campaign_event/",
+                    "https://docomo-simulator.vercel.app/?utm_source=chatgpt.com",
                     "_blank",
                   )
                 }
@@ -831,7 +831,7 @@ export default function App() {
   space-y-4
 "
             >
-              {installment !== 0 && (
+              {lines[activeTab].installment !== 0 && (
                 <>
                   <div>
                     <div
@@ -905,34 +905,35 @@ export default function App() {
                   </div>
                 </>
               )}
-              {installment !== 0 && installment !== 1 && (
-                <div>
-                  <div
-                    className="
+              {lines[activeTab].installment !== 0 &&
+                lines[activeTab].installment !== 1 && (
+                  <div>
+                    <div
+                      className="
     mb-1
     text-base
     font-bold
   "
-                  >
-                    頭金
-                  </div>
+                    >
+                      頭金
+                    </div>
 
-                  <input
-                    type="number"
-                    value={
-                      lines[activeTab].downPayment === 0
-                        ? ""
-                        : lines[activeTab].downPayment
-                    }
-                    onChange={(e) => {
-                      const updated = [...lines];
+                    <input
+                      type="number"
+                      value={
+                        lines[activeTab].downPayment === 0
+                          ? ""
+                          : lines[activeTab].downPayment
+                      }
+                      onChange={(e) => {
+                        const updated = [...lines];
 
-                      updated[activeTab].downPayment =
-                        e.target.value === "" ? 0 : Number(e.target.value);
+                        updated[activeTab].downPayment =
+                          e.target.value === "" ? 0 : Number(e.target.value);
 
-                      setLines(updated);
-                    }}
-                    className="
+                        setLines(updated);
+                      }}
+                      className="
     w-full
     h-[44px]
     rounded-xl
@@ -941,9 +942,9 @@ export default function App() {
     text-base
     bg-white
   "
-                  />
-                </div>
-              )}
+                    />
+                  </div>
+                )}
               <div>
                 <div
                   className="
@@ -956,8 +957,14 @@ export default function App() {
                 </div>
 
                 <select
-                  value={installment}
-                  onChange={(e) => setInstallment(Number(e.target.value))}
+                  value={lines[activeTab].installment}
+                  onChange={(e) => {
+                    const updated = [...lines];
+
+                    updated[activeTab].installment = Number(e.target.value);
+
+                    setLines(updated);
+                  }}
                   className="
             w-full
             h-[44px]
