@@ -1253,6 +1253,11 @@ export default function App() {
                       updated[activeTab].mailCarry = false;
                     }
 
+                    if (found.name.includes("ドコモmini")) {
+                      updated[activeTab].longTermDiscount = "";
+                      updated[activeTab].selectedDiscounts = [];
+                    }
+
                     if (wasCustom !== willBeCustom) {
                       updated[activeTab].mailCarry = false;
 
