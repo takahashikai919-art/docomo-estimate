@@ -294,7 +294,7 @@ export default function App() {
       ...line.customDiscounts,
     ];
 
-    const isNoDevice = line.installment === 0;
+    const isNoDevice = line.installment === 0 || line.installment === -1;
     const isLumpSum = line.installment === 1;
     const isKaedoki = line.installment === 23;
 
@@ -383,7 +383,8 @@ export default function App() {
     ...lines[activeTab].customDiscounts,
   ];
 
-  const isNoDevice = lines[activeTab].installment === 0;
+  const isNoDevice =
+    lines[activeTab].installment === 0 || lines[activeTab].installment === -1;
   const isLumpSum = lines[activeTab].installment === 1;
   const isKaedoki = lines[activeTab].installment === 23;
 
@@ -619,7 +620,12 @@ export default function App() {
     ${activeTab === index ? "bg-blue-600 text-white" : "bg-white"}
   `}
               >
-                {index + 1}. {lines[index].deviceName || "未入力"}
+                {index + 1}.{" "}
+                {lines[index].installment === 0
+                  ? "プラン変更"
+                  : lines[index].installment === -1
+                    ? "SIM契約"
+                    : lines[index].deviceName || "未入力"}
               </button>
 
               <button
@@ -946,30 +952,31 @@ export default function App() {
   space-y-4
 "
             >
-              {lines[activeTab].installment !== 0 && (
-                <>
-                  <div>
-                    <div
-                      className="
+              {lines[activeTab].installment !== 0 &&
+                lines[activeTab].installment !== -1 && (
+                  <>
+                    <div>
+                      <div
+                        className="
           mb-1
           text-base
           font-bold
         "
-                    >
-                      機種名
-                    </div>
+                      >
+                        機種名
+                      </div>
 
-                    <input
-                      type="text"
-                      value={lines[activeTab].deviceName}
-                      onChange={(e) => {
-                        const updated = [...lines];
+                      <input
+                        type="text"
+                        value={lines[activeTab].deviceName}
+                        onChange={(e) => {
+                          const updated = [...lines];
 
-                        updated[activeTab].deviceName = e.target.value;
+                          updated[activeTab].deviceName = e.target.value;
 
-                        setLines(updated);
-                      }}
-                      className="
+                          setLines(updated);
+                        }}
+                        className="
             w-full
             h-[40px]
             rounded-xl
@@ -978,36 +985,36 @@ export default function App() {
             text-base
             bg-white
           "
-                    />
-                  </div>
+                      />
+                    </div>
 
-                  <div>
-                    <div
-                      className="
+                    <div>
+                      <div
+                        className="
           mb-1
           text-base
           font-bold
         "
-                    >
-                      端末価格（頭金込み）
-                    </div>
+                      >
+                        端末価格（頭金込み）
+                      </div>
 
-                    <input
-                      type="number"
-                      value={
-                        lines[activeTab].devicePrice === 0
-                          ? ""
-                          : lines[activeTab].devicePrice
-                      }
-                      onChange={(e) => {
-                        const updated = [...lines];
+                      <input
+                        type="number"
+                        value={
+                          lines[activeTab].devicePrice === 0
+                            ? ""
+                            : lines[activeTab].devicePrice
+                        }
+                        onChange={(e) => {
+                          const updated = [...lines];
 
-                        updated[activeTab].devicePrice =
-                          e.target.value === "" ? 0 : Number(e.target.value);
+                          updated[activeTab].devicePrice =
+                            e.target.value === "" ? 0 : Number(e.target.value);
 
-                        setLines(updated);
-                      }}
-                      className="
+                          setLines(updated);
+                        }}
+                        className="
             w-full
             h-[44px]
             rounded-xl
@@ -1016,11 +1023,12 @@ export default function App() {
             text-base
             bg-white
           "
-                    />
-                  </div>
-                </>
-              )}
+                      />
+                    </div>
+                  </>
+                )}
               {lines[activeTab].installment !== 0 &&
+                lines[activeTab].installment !== -1 &&
                 lines[activeTab].installment !== 1 && (
                   <div>
                     <div
@@ -1090,7 +1098,9 @@ export default function App() {
             bg-white
           "
                 >
-                  <option value={0}>機種購入なし</option>
+                  <option value={0}>プラン変更</option>
+
+                  <option value={-1}>SIM契約</option>
 
                   <option value={1}>一括購入</option>
 
