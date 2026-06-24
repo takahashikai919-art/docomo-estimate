@@ -150,79 +150,11 @@ export default function App() {
 
   const [showPrintPreview, setShowPrintPreview] = useState(false);
 
+  const [printAllLines, setPrintAllLines] = useState(false);
+
   const [activeTab, setActiveTab] = useState(0);
 
   const [lines, setLines] = useState([
-    {
-      deviceName: "",
-      devicePrice: 0,
-      installment: 24,
-      selectedPlan: plans[0],
-
-      selectedDiscounts: [] as string[],
-
-      dcardDiscount: "",
-      longTermDiscount: "",
-
-      downPayment: 16500,
-
-      firstPayment: 0,
-      residualPrice: 0,
-      secondPayment: 0,
-      mailCarry: false,
-
-      customPlanName: "",
-      customPlanPrice: 0,
-
-      customOptions: [] as {
-        name: string;
-        price: number;
-      }[],
-      customDiscounts: [] as {
-        name: string;
-        price: number;
-      }[],
-      customFees: [] as {
-        name: string;
-        price: number;
-      }[],
-    },
-
-    {
-      deviceName: "",
-      devicePrice: 0,
-      installment: 24,
-      selectedPlan: plans[0],
-
-      selectedDiscounts: [] as string[],
-
-      dcardDiscount: "",
-      longTermDiscount: "",
-
-      downPayment: 16500,
-
-      firstPayment: 0,
-      residualPrice: 0,
-      secondPayment: 0,
-      mailCarry: false,
-
-      customPlanName: "",
-      customPlanPrice: 0,
-
-      customOptions: [] as {
-        name: string;
-        price: number;
-      }[],
-      customDiscounts: [] as {
-        name: string;
-        price: number;
-      }[],
-      customFees: [] as {
-        name: string;
-        price: number;
-      }[],
-    },
-
     {
       deviceName: "",
       devicePrice: 0,
@@ -307,6 +239,99 @@ export default function App() {
     ? lines[activeTab].customPlanPrice
     : lines[activeTab].selectedPlan.price;
 
+  const calculateLine = (line: any) => {
+    const isCustom = line.selectedPlan.name === "旧プラン・自由入力";
+
+    const planPrice = isCustom ? line.customPlanPrice : line.selectedPlan.price;
+
+    const optionTotal =
+      line.customOptions.reduce(
+        (sum: number, option: any) => sum + option.price,
+        0,
+      ) + (!isCustom && line.mailCarry ? 330 : 0);
+
+    const discountTotal =
+      (discountsByPlan[line.selectedPlan.name] || []).reduce(
+        (sum: number, discount: any) => {
+          if (line.selectedDiscounts.includes(discount.name)) {
+            return sum + discount.price;
+          }
+
+          return sum;
+        },
+        0,
+      ) +
+      Number(line.dcardDiscount) +
+      Number(line.longTermDiscount) +
+      line.customDiscounts.reduce(
+        (sum: number, discount: any) => sum + discount.price,
+        0,
+      );
+
+    const estimateDiscounts = [
+      ...(discountsByPlan[line.selectedPlan.name] || []).filter(
+        (discount: any) => line.selectedDiscounts.includes(discount.name),
+      ),
+
+      ...(Number(line.dcardDiscount) > 0
+        ? [
+            {
+              name: "dカード支払割",
+              price: Number(line.dcardDiscount),
+            },
+          ]
+        : []),
+
+      ...(Number(line.longTermDiscount) > 0
+        ? [
+            {
+              name: "長期利用割",
+              price: Number(line.longTermDiscount),
+            },
+          ]
+        : []),
+
+      ...line.customDiscounts,
+    ];
+
+    const isNoDevice = line.installment === 0;
+    const isLumpSum = line.installment === 1;
+    const isKaedoki = line.installment === 23;
+
+    const installmentPrice =
+      isNoDevice || isLumpSum
+        ? 0
+        : isKaedoki
+          ? line.firstPayment
+          : Math.max(
+              0,
+              Math.trunc(
+                (line.devicePrice - line.downPayment) / line.installment,
+              ),
+            );
+
+    const grandTotal = Math.max(
+      0,
+      installmentPrice + planPrice + optionTotal - discountTotal,
+    );
+
+    const grandTotalSecond = Math.max(
+      0,
+      line.secondPayment + planPrice + optionTotal - discountTotal,
+    );
+
+    return {
+      planPrice,
+      optionTotal,
+      discountTotal,
+      estimateDiscounts,
+      isKaedoki,
+      installmentPrice,
+      grandTotal,
+      grandTotalSecond,
+    };
+  };
+
   const optionTotal =
     lines[activeTab].customOptions.reduce(
       (sum, option) => sum + option.price,
@@ -386,7 +411,7 @@ export default function App() {
     lines[activeTab].secondPayment + planPrice + optionTotal - discountTotal,
   );
 
-  if (showPrintPreview) {
+  if (showPrintPreview && !printAllLines) {
     return (
       <PrintEstimate
         storeName={storeName}
@@ -416,6 +441,85 @@ export default function App() {
       />
     );
   }
+  if (showPrintPreview && printAllLines) {
+    return (
+      <div className="bg-white p-4">
+        <div className="mb-6 no-print flex gap-4">
+          <button
+            onClick={() => window.print()}
+            className="
+            rounded-lg
+            bg-blue-600
+            px-6
+            py-3
+            text-white
+            font-bold
+          "
+          >
+            印刷
+          </button>
+
+          <button
+            onClick={() => {
+              setPrintAllLines(false);
+              setShowPrintPreview(false);
+            }}
+            className="
+            rounded-lg
+            border
+            px-6
+            py-3
+            font-bold
+          "
+          >
+            閉じる
+          </button>
+        </div>
+
+        {lines.map((line, index) => {
+          const calc = calculateLine(line);
+
+          return (
+            <div
+              key={index}
+              style={{
+                pageBreakAfter: index === lines.length - 1 ? "auto" : "always",
+              }}
+            >
+              <PrintEstimate
+                storeName={storeName}
+                staffName={staffName}
+                deviceName={line.deviceName}
+                planName={
+                  line.selectedPlan.name === "旧プラン・自由入力"
+                    ? line.customPlanName
+                    : line.selectedPlan.name
+                }
+                devicePrice={line.devicePrice}
+                options={line.customOptions}
+                mailCarry={line.mailCarry}
+                discounts={calc.estimateDiscounts}
+                optionTotal={calc.optionTotal}
+                installmentPrice={calc.installmentPrice}
+                discountTotal={calc.discountTotal}
+                grandTotal={calc.grandTotal}
+                grandTotalSecond={calc.grandTotalSecond}
+                isKaedoki={calc.isKaedoki}
+                onClose={() => {}}
+                firstPayment={line.firstPayment}
+                residualPrice={line.residualPrice}
+                secondPayment={line.secondPayment}
+                installment={line.installment}
+                fees={line.customFees}
+                showButtons={false}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   console.log(localStorage.getItem("docomo-lines"));
   return (
     <div
@@ -672,6 +776,17 @@ export default function App() {
                 className="text-left"
               >
                 印刷
+              </button>
+
+              <button
+                onClick={() => {
+                  setPrintAllLines(true);
+                  setShowPrintPreview(true);
+                  setIsMenuOpen(false);
+                }}
+                className="text-left"
+              >
+                全回線印刷
               </button>
 
               <button
