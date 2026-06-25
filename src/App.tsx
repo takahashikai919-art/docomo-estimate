@@ -173,6 +173,8 @@ export default function App() {
       secondPayment: 0,
       mailCarry: false,
 
+      selected: false,
+
       customPlanName: "",
       customPlanPrice: 0,
 
@@ -331,6 +333,19 @@ export default function App() {
       grandTotalSecond,
     };
   };
+
+  const selectedLines = lines.filter((line) => line.selected);
+
+  const selectedTotal = selectedLines.reduce((sum, line) => {
+    const calc = calculateLine(line);
+    return sum + calc.grandTotal;
+  }, 0);
+
+  const circledNumbers = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
+
+  const selectedNames = selectedLines
+    .map((line) => circledNumbers[lines.indexOf(line) + 1])
+    .join("＋");
 
   const optionTotal =
     lines[activeTab].customOptions.reduce(
@@ -620,12 +635,28 @@ export default function App() {
     ${activeTab === index ? "bg-blue-600 text-white" : "bg-white"}
   `}
               >
-                {index + 1}.{" "}
-                {lines[index].installment === 0
-                  ? "プラン変更"
-                  : lines[index].installment === -1
-                    ? "SIM契約"
-                    : lines[index].deviceName || "未入力"}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={lines[index].selected}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      const updated = [...lines];
+                      updated[index].selected = e.target.checked;
+                      setLines(updated);
+                    }}
+                    className="w-4 h-4"
+                  />
+
+                  <span>
+                    {index + 1}.{" "}
+                    {lines[index].installment === 0
+                      ? "プラン変更"
+                      : lines[index].installment === -1
+                        ? "SIM契約"
+                        : lines[index].deviceName || "未入力"}
+                  </span>
+                </div>
               </button>
 
               <button
@@ -693,6 +724,8 @@ export default function App() {
                   secondPayment: 0,
 
                   mailCarry: false,
+
+                  selected: false,
 
                   customPlanName: "",
                   customPlanPrice: 0,
@@ -2215,6 +2248,69 @@ export default function App() {
           </div>
         </div>
       </div>
+      {selectedLines.length > 0 && (
+        <div
+          className="
+      mt-4
+      mx-4
+      rounded-2xl
+      border-2
+      border-blue-500
+      bg-blue-50
+      p-3
+    "
+        >
+          <div
+            className="
+    grid
+    grid-cols-3
+    items-center
+  "
+          >
+            <div
+              className="
+      text-lg
+      font-bold
+      text-blue-700
+    "
+            >
+              選択回線合計
+            </div>
+
+            <div
+              className="
+      text-center
+      text-2xl
+      font-black
+      text-blue-600
+    "
+            >
+              {selectedNames}
+            </div>
+
+            <div></div>
+          </div>
+
+          <div
+            className="
+    my-3
+    border-t
+  "
+          ></div>
+
+          <div
+            className="
+    mt-1        
+    text-5xl
+    font-black
+    text-blue-700
+    text-center
+  "
+          >
+            ¥{selectedTotal.toLocaleString()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
