@@ -51,11 +51,6 @@ export default function App() {
   > = {
     "ドコモMAX（～1GB）": [
       {
-        name: "みんなドコモ割",
-        price: 1210,
-      },
-
-      {
         name: "ドコモ光セット割",
         price: 1210,
       },
@@ -67,11 +62,6 @@ export default function App() {
     ],
 
     "ドコモMAX（～3GB）": [
-      {
-        name: "みんなドコモ割",
-        price: 1210,
-      },
-
       {
         name: "ドコモ光セット割",
         price: 1210,
@@ -85,11 +75,6 @@ export default function App() {
 
     "ドコモMAX（無制限）": [
       {
-        name: "みんなドコモ割",
-        price: 1210,
-      },
-
-      {
         name: "ドコモ光セット割",
         price: 1210,
       },
@@ -101,11 +86,6 @@ export default function App() {
     ],
 
     ドコモポイ活MAX: [
-      {
-        name: "みんなドコモ割",
-        price: 1210,
-      },
-
       {
         name: "ドコモ光セット割",
         price: 1210,
@@ -164,6 +144,7 @@ export default function App() {
       selectedDiscounts: [] as string[],
 
       dcardDiscount: "",
+      familyDiscount: "",
       longTermDiscount: "",
 
       downPayment: 16500,
@@ -264,11 +245,12 @@ export default function App() {
         0,
       ) +
       Number(line.dcardDiscount) +
-      Number(line.longTermDiscount) +
-      line.customDiscounts.reduce(
-        (sum: number, discount: any) => sum + discount.price,
-        0,
-      );
+      Number(line.familyDiscount) +
+      Number(line.longTermDiscount);
+    line.customDiscounts.reduce(
+      (sum: number, discount: any) => sum + discount.price,
+      0,
+    );
 
     const estimateDiscounts = [
       ...(discountsByPlan[line.selectedPlan.name] || []).filter(
@@ -280,6 +262,15 @@ export default function App() {
             {
               name: "dカード支払割",
               price: Number(line.dcardDiscount),
+            },
+          ]
+        : []),
+
+      ...(Number(line.familyDiscount) > 0
+        ? [
+            {
+              name: "みんなドコモ割",
+              price: Number(line.familyDiscount),
             },
           ]
         : []),
@@ -366,6 +357,7 @@ export default function App() {
       0,
     ) +
     Number(lines[activeTab].dcardDiscount) +
+    Number(lines[activeTab].familyDiscount) +
     Number(lines[activeTab].longTermDiscount) +
     lines[activeTab].customDiscounts.reduce(
       (sum, discount) => sum + discount.price,
@@ -382,6 +374,15 @@ export default function App() {
           {
             name: "dカード支払割",
             price: Number(lines[activeTab].dcardDiscount),
+          },
+        ]
+      : []),
+
+    ...(Number(lines[activeTab].familyDiscount) > 0
+      ? [
+          {
+            name: "みんなドコモ割",
+            price: Number(lines[activeTab].familyDiscount),
           },
         ]
       : []),
@@ -715,6 +716,7 @@ export default function App() {
                   selectedDiscounts: [],
 
                   dcardDiscount: "",
+                  familyDiscount: "",
                   longTermDiscount: "",
 
                   downPayment: 16500,
@@ -1413,6 +1415,7 @@ export default function App() {
 
                     if (found.name.includes("ドコモmini")) {
                       updated[activeTab].longTermDiscount = "";
+                      updated[activeTab].familyDiscount = "";
                       updated[activeTab].selectedDiscounts = [];
                     }
 
@@ -1840,6 +1843,46 @@ export default function App() {
                         <option value="110">10年以上（110円）</option>
 
                         <option value="220">20年以上（220円）</option>
+                      </select>
+                    </div>
+                  )}
+                  {!lines[activeTab].selectedPlan.name.includes(
+                    "ドコモmini",
+                  ) && (
+                    <div>
+                      <div
+                        className="
+      mb-1
+      text-sm
+      font-bold
+    "
+                      >
+                        みんなドコモ割
+                      </div>
+
+                      <select
+                        value={lines[activeTab].familyDiscount}
+                        onChange={(e) => {
+                          const updated = [...lines];
+
+                          updated[activeTab].familyDiscount = e.target.value;
+
+                          setLines(updated);
+                        }}
+                        className="
+      w-full
+      h-[38px]
+      rounded-xl
+      border
+      px-3
+      text-sm
+    "
+                      >
+                        <option value="">選択なし</option>
+
+                        <option value="550">2回線（550円）</option>
+
+                        <option value="1210">3回線以上（1,210円）</option>
                       </select>
                     </div>
                   )}
