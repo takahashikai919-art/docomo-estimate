@@ -39,6 +39,8 @@ type Props = {
 
   mailCarry: boolean;
 
+  serviceType: string;
+
   showButtons?: boolean;
 };
 
@@ -71,6 +73,8 @@ export default function PrintEstimate({
 
   mailCarry,
 
+  serviceType,
+
   showButtons = true,
   onClose,
 }: Props) {
@@ -102,9 +106,9 @@ export default function PrintEstimate({
     @media print {
 
   @page {
-    size: A4;
-    margin: 8mm;
-  }
+  size: A4;
+  margin: 5mm;
+}
 
   .no-print {
     display: none !important;
@@ -115,8 +119,9 @@ export default function PrintEstimate({
     background: white !important;
   }
 
-  table td {
-  padding: 6px !important;
+  table td,
+table th {
+  padding: 4px !important;
 }
 
 h2 {
@@ -127,9 +132,9 @@ h2 {
 @media print {
 
   @page {
-    size: A4;
-    margin: 8mm;
-  }
+  size: A4;
+  margin: 5mm;
+}
 
   html,
   body {
@@ -146,9 +151,9 @@ h2 {
       </style>
       <div
         className="
-    w-[190mm]
-    mx-auto
-    p-5
+    w-[200mm]
+mx-auto
+p-3
     bg-white
   "
       >
@@ -157,13 +162,13 @@ h2 {
             text-2xl
             font-bold
             text-center
-            mb-8
+            mb-5
           "
         >
           料金見積書
         </h1>
 
-        <div className="flex justify-between mb-8">
+        <div className="flex justify-between mb-4 text-sm">
           <div>店舗名：{storeName}</div>
 
           <div>担当者：{staffName}</div>
@@ -343,7 +348,15 @@ h2 {
                       -¥{discount.price.toLocaleString()}
                     </td>
 
-                    <td className="border p-2">{discount.name}</td>
+                    <td className="border p-2">
+                      <div>{discount.name}</div>
+
+                      {discount.name === "月々サポート" && (
+                        <div className="mt-1 text-xs text-red-600">
+                          ※初回のみ1,585円割引
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -353,7 +366,9 @@ h2 {
               {isNoDevice ? (
                 <tr>
                   <td className="border border-r p-3 align-top">
-                    <div className="font-bold">機種情報</div>
+                    <div className="font-bold">
+                      {serviceType === "MB" ? "機種情報" : "契約情報"}
+                    </div>
                   </td>
 
                   <td colSpan={2} className="border p-2">
@@ -363,7 +378,9 @@ h2 {
               ) : isLumpSum ? (
                 <tr>
                   <td className="border border-r p-3 align-top">
-                    <div className="font-bold">機種情報</div>
+                    <div className="font-bold">
+                      {serviceType === "MB" ? "機種情報" : "契約情報"}
+                    </div>
 
                     <div className="mt-4">¥{devicePrice.toLocaleString()}</div>
                   </td>
@@ -378,7 +395,13 @@ h2 {
                 <>
                   <tr className="border-t">
                     <td rowSpan={3} className="border border-r p-3 align-top">
-                      <div className="font-bold">◇機種代金(カエドキ)</div>
+                      <div className="font-bold">
+                        {serviceType === "MB"
+                          ? "◇機種代金(カエドキ)"
+                          : deviceName === "ドコモ光"
+                            ? "◇ドコモ光工事費"
+                            : "◇機種代金"}
+                      </div>
 
                       <div className="mt-4">
                         ¥{devicePrice.toLocaleString()}
@@ -411,7 +434,13 @@ h2 {
               ) : (
                 <tr className="border-t">
                   <td className="border border-r p-3 align-top">
-                    <div className="font-bold">◇機種代金</div>
+                    <div className="font-bold">
+                      {serviceType === "MB"
+                        ? "◇機種代金"
+                        : deviceName === "ドコモ光"
+                          ? "◇ドコモ光工事費"
+                          : "◇機種代金"}
+                    </div>
 
                     <div className="mt-4">¥{devicePrice.toLocaleString()}</div>
                   </td>
@@ -421,7 +450,27 @@ h2 {
                   </td>
 
                   <td className="border p-2">
-                    {deviceName}（{installment}回）
+                    <div>
+                      {serviceType === "BB" && deviceName === "ドコモ光"
+                        ? `工事費（${installment}回）`
+                        : `${deviceName}（${installment}回）`}
+                    </div>
+
+                    {serviceType === "BB" &&
+                      deviceName === "Home 5G" &&
+                      installment === 24 && (
+                        <div className="mt-1 text-xs text-red-600">
+                          ※初回のみ3,064円のお支払いとなります
+                        </div>
+                      )}
+
+                    {serviceType === "BB" &&
+                      deviceName === "Home 5G" &&
+                      installment === 48 && (
+                        <div className="mt-1 text-xs text-red-600">
+                          ※初回のみ1,538円のお支払いとなります
+                        </div>
+                      )}
                   </td>
                 </tr>
               )}
@@ -468,7 +517,9 @@ h2 {
             w-[28%]
           "
                 >
-                  <div className="font-bold">手数料・付属品</div>
+                  <div className="font-bold">
+                    {serviceType === "MB" ? "手数料・付属品" : "手数料・工事費"}
+                  </div>
                 </td>
 
                 <td colSpan={2} className="border p-0">

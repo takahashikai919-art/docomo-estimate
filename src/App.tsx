@@ -1,11 +1,47 @@
+import {
+  applyHome5GDefaults,
+  applyHikariDefaults,
+  applyMobileDefaults,
+} from "./utils/applyDefaults";
+
 import { useState, useEffect } from "react";
 
 import { Smartphone, Database, Tag, Wallet, Menu, X } from "lucide-react";
 
+import FeeSection from "./components/FeeSection";
+
+import GrandTotal from "./components/GrandTotal";
+
 import PrintEstimate from "./components/PrintEstimate";
 
+import DeviceMobile from "./components/DeviceMobile";
+
+import OptionMobile from "./components/OptionMobile";
+
+import DiscountMobile from "./components/DiscountMobile";
+
+import DiscountHome5G from "./components/DiscountHome5G";
+
+import OptionHome5G from "./components/OptionHome5G";
+
+import PlanHome5G from "./components/PlanHome5G";
+
+import PlanHikari from "./components/PlanHikari";
+
+import DeviceHome5G from "./components/DeviceHome5G";
+
+import DiscountHikari from "./components/DiscountHikari";
+
+import OptionHikari from "./components/OptionHikari";
+
+import InstallmentMobile from "./components/InstallmentMobile";
+
+import InstallmentHome5G from "./components/InstallmentHome5G";
+
+import InstallmentHikari from "./components/InstallmentHikari";
+
 export default function App() {
-  const plans = [
+  const mobilePlans = [
     {
       name: "ドコモMAX（～1GB）",
       price: 5698,
@@ -41,6 +77,8 @@ export default function App() {
       price: 0,
     },
   ];
+
+  const plans = mobilePlans;
 
   const discountsByPlan: Record<
     string,
@@ -137,8 +175,13 @@ export default function App() {
   const [lines, setLines] = useState([
     {
       deviceName: "",
+      contractType: "Home 5G",
       devicePrice: 0,
       installment: 24,
+
+      constructionFee: 0,
+      constructionInstallment: 1,
+
       selectedPlan: plans[0],
 
       selectedDiscounts: [] as string[],
@@ -153,6 +196,8 @@ export default function App() {
       residualPrice: 0,
       secondPayment: 0,
       mailCarry: false,
+
+      serviceType: "MB",
 
       selected: false,
 
@@ -218,9 +263,12 @@ export default function App() {
   const isCustomPlan =
     lines[activeTab].selectedPlan.name === "旧プラン・自由入力";
 
-  const planPrice = isCustomPlan
-    ? lines[activeTab].customPlanPrice
-    : lines[activeTab].selectedPlan.price;
+  const planPrice =
+    lines[activeTab].serviceType === "BB"
+      ? lines[activeTab].selectedPlan.price
+      : isCustomPlan
+        ? lines[activeTab].customPlanPrice
+        : lines[activeTab].selectedPlan.price;
 
   const calculateLine = (line: any) => {
     const isCustom = line.selectedPlan.name === "旧プラン・自由入力";
@@ -246,11 +294,12 @@ export default function App() {
       ) +
       Number(line.dcardDiscount) +
       Number(line.familyDiscount) +
-      Number(line.longTermDiscount);
-    line.customDiscounts.reduce(
-      (sum: number, discount: any) => sum + discount.price,
-      0,
-    );
+      Number(line.longTermDiscount) +
+      line.customDiscounts.reduce(
+        (sum: number, discount: any) => sum + discount.price,
+        0,
+      ) +
+      (line.serviceType === "BB" && line.contractType === "Home 5G" ? 1525 : 0);
 
     const estimateDiscounts = [
       ...(discountsByPlan[line.selectedPlan.name] || []).filter(
@@ -285,23 +334,38 @@ export default function App() {
         : []),
 
       ...line.customDiscounts,
+      ...(line.serviceType === "BB" && line.contractType === "Home 5G"
+        ? [
+            {
+              name: "月々サポート",
+              price: 1525,
+            },
+          ]
+        : []),
     ];
 
     const isNoDevice = line.installment === 0 || line.installment === -1;
     const isLumpSum = line.installment === 1;
     const isKaedoki = line.installment === 23;
 
-    const installmentPrice =
-      isNoDevice || isLumpSum
+    const constructionMonthly =
+      line.constructionInstallment === 1
         ? 0
-        : isKaedoki
-          ? line.firstPayment
-          : Math.max(
-              0,
-              Math.trunc(
-                (line.devicePrice - line.downPayment) / line.installment,
-              ),
-            );
+        : Math.trunc(line.constructionFee / line.constructionInstallment);
+
+    const installmentPrice =
+      line.contractType === "ドコモ光"
+        ? constructionMonthly
+        : isNoDevice || isLumpSum
+          ? 0
+          : isKaedoki
+            ? line.firstPayment
+            : Math.max(
+                0,
+                Math.trunc(
+                  (line.devicePrice - line.downPayment) / line.installment,
+                ),
+              );
 
     const grandTotal = Math.max(
       0,
@@ -359,6 +423,10 @@ export default function App() {
     Number(lines[activeTab].dcardDiscount) +
     Number(lines[activeTab].familyDiscount) +
     Number(lines[activeTab].longTermDiscount) +
+    (lines[activeTab].serviceType === "BB" &&
+    lines[activeTab].contractType === "Home 5G"
+      ? 1525
+      : 0) +
     lines[activeTab].customDiscounts.reduce(
       (sum, discount) => sum + discount.price,
       0,
@@ -396,6 +464,16 @@ export default function App() {
         ]
       : []),
 
+    ...(lines[activeTab].serviceType === "BB" &&
+    lines[activeTab].contractType === "Home 5G"
+      ? [
+          {
+            name: "月々サポート",
+            price: 1525,
+          },
+        ]
+      : []),
+
     ...lines[activeTab].customDiscounts,
   ];
 
@@ -404,18 +482,28 @@ export default function App() {
   const isLumpSum = lines[activeTab].installment === 1;
   const isKaedoki = lines[activeTab].installment === 23;
 
-  const installmentPrice =
-    isNoDevice || isLumpSum
+  const constructionMonthly =
+    lines[activeTab].constructionInstallment === 1
       ? 0
-      : isKaedoki
-        ? lines[activeTab].firstPayment
-        : Math.max(
-            0,
-            Math.trunc(
-              (lines[activeTab].devicePrice - lines[activeTab].downPayment) /
-                lines[activeTab].installment,
-            ),
-          );
+      : Math.trunc(
+          lines[activeTab].constructionFee /
+            lines[activeTab].constructionInstallment,
+        );
+
+  const installmentPrice =
+    lines[activeTab].contractType === "ドコモ光"
+      ? constructionMonthly
+      : isNoDevice || isLumpSum
+        ? 0
+        : isKaedoki
+          ? lines[activeTab].firstPayment
+          : Math.max(
+              0,
+              Math.trunc(
+                (lines[activeTab].devicePrice - lines[activeTab].downPayment) /
+                  lines[activeTab].installment,
+              ),
+            );
 
   const grandTotal = Math.max(
     0,
@@ -433,15 +521,24 @@ export default function App() {
       <PrintEstimate
         storeName={storeName}
         staffName={staffName}
-        deviceName={lines[activeTab].deviceName}
+        deviceName={
+          lines[activeTab].serviceType === "MB"
+            ? lines[activeTab].deviceName
+            : lines[activeTab].contractType
+        }
         planName={
           isCustomPlan
             ? lines[activeTab].customPlanName
             : lines[activeTab].selectedPlan.name
         }
-        devicePrice={lines[activeTab].devicePrice}
+        devicePrice={
+          lines[activeTab].contractType === "ドコモ光"
+            ? lines[activeTab].constructionFee
+            : lines[activeTab].devicePrice
+        }
         options={lines[activeTab].customOptions}
         mailCarry={lines[activeTab].mailCarry}
+        serviceType={lines[activeTab].serviceType}
         discounts={estimateDiscounts}
         optionTotal={optionTotal}
         installmentPrice={installmentPrice}
@@ -453,7 +550,11 @@ export default function App() {
         firstPayment={lines[activeTab].firstPayment}
         residualPrice={lines[activeTab].residualPrice}
         secondPayment={lines[activeTab].secondPayment}
-        installment={lines[activeTab].installment}
+        installment={
+          lines[activeTab].contractType === "ドコモ光"
+            ? lines[activeTab].constructionInstallment
+            : lines[activeTab].installment
+        }
         fees={lines[activeTab].customFees}
       />
     );
@@ -506,15 +607,24 @@ export default function App() {
               <PrintEstimate
                 storeName={storeName}
                 staffName={staffName}
-                deviceName={line.deviceName}
+                deviceName={
+                  line.serviceType === "MB"
+                    ? line.deviceName
+                    : line.contractType
+                }
                 planName={
                   line.selectedPlan.name === "旧プラン・自由入力"
                     ? line.customPlanName
                     : line.selectedPlan.name
                 }
-                devicePrice={line.devicePrice}
+                devicePrice={
+                  line.contractType === "ドコモ光"
+                    ? line.constructionFee
+                    : line.devicePrice
+                }
                 options={line.customOptions}
                 mailCarry={line.mailCarry}
+                serviceType={line.serviceType}
                 discounts={calc.estimateDiscounts}
                 optionTotal={calc.optionTotal}
                 installmentPrice={calc.installmentPrice}
@@ -526,7 +636,11 @@ export default function App() {
                 firstPayment={line.firstPayment}
                 residualPrice={line.residualPrice}
                 secondPayment={line.secondPayment}
-                installment={line.installment}
+                installment={
+                  line.contractType === "ドコモ光"
+                    ? line.constructionInstallment
+                    : line.installment
+                }
                 fees={line.customFees}
                 showButtons={false}
               />
@@ -651,11 +765,13 @@ export default function App() {
 
                   <span>
                     {index + 1}.{" "}
-                    {lines[index].installment === 0
-                      ? "プラン変更"
-                      : lines[index].installment === -1
-                        ? "SIM契約"
-                        : lines[index].deviceName || "未入力"}
+                    {lines[index].serviceType === "BB"
+                      ? lines[index].contractType
+                      : lines[index].installment === 0
+                        ? "プラン変更"
+                        : lines[index].installment === -1
+                          ? "SIM契約"
+                          : lines[index].deviceName || "未入力"}
                   </span>
                 </div>
               </button>
@@ -709,8 +825,13 @@ export default function App() {
 
                 {
                   deviceName: "",
+                  contractType: "Home 5G",
                   devicePrice: 0,
                   installment: 24,
+
+                  constructionFee: 0,
+                  constructionInstallment: 1,
+
                   selectedPlan: plans[0],
 
                   selectedDiscounts: [],
@@ -726,6 +847,8 @@ export default function App() {
                   secondPayment: 0,
 
                   mailCarry: false,
+
+                  serviceType: "MB",
 
                   selected: false,
 
@@ -970,14 +1093,96 @@ export default function App() {
             >
               <Smartphone className="text-red-600" size={28} />
 
-              <div
-                className="
-        text-xl
-        font-bold
-        text-red-700
-      "
-              >
-                端末
+              <div className="flex items-center justify-between w-full">
+                <div
+                  className="
+      text-xl
+      font-bold
+      text-red-700
+    "
+                >
+                  {lines[activeTab].serviceType === "MB" ? "端末" : "契約種別"}
+                </div>
+
+                <button
+                  onClick={() => {
+                    const updated = [...lines];
+
+                    updated[activeTab].serviceType =
+                      updated[activeTab].serviceType === "MB" ? "BB" : "MB";
+
+                    if (updated[activeTab].serviceType === "BB") {
+                      if (updated[activeTab].contractType === "Home 5G") {
+                        applyHome5GDefaults(updated[activeTab]);
+                      } else {
+                        applyHikariDefaults(updated[activeTab]);
+                      }
+                    } else {
+                      applyMobileDefaults(updated[activeTab]);
+                    }
+
+                    setLines(updated);
+                  }}
+                  className="
+      flex
+      items-center
+      gap-2
+      rounded-full
+      bg-gray-200
+      px-2
+      py-1
+      text-sm
+      font-bold
+    "
+                >
+                  <span
+                    className={
+                      lines[activeTab].serviceType === "MB"
+                        ? "text-blue-600"
+                        : "text-gray-500"
+                    }
+                  >
+                    MB
+                  </span>
+
+                  <div
+                    className={`
+        w-10
+        h-5
+        rounded-full
+        relative
+        transition
+        ${
+          lines[activeTab].serviceType === "MB" ? "bg-blue-500" : "bg-green-500"
+        }
+      `}
+                  >
+                    <div
+                      className={`
+          absolute
+          top-[2px]
+          w-4
+          h-4
+          rounded-full
+          bg-white
+          transition-all
+          ${
+            lines[activeTab].serviceType === "MB" ? "left-[2px]" : "left-[22px]"
+          }
+        `}
+                    />
+                  </div>
+
+                  <span
+                    className={
+                      lines[activeTab].serviceType === "BB"
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }
+                  >
+                    BB
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -998,53 +1203,99 @@ export default function App() {
           font-bold
         "
                       >
-                        機種名
+                        {lines[activeTab].serviceType === "MB"
+                          ? "機種名"
+                          : "契約種別"}
                       </div>
 
-                      <input
-                        type="text"
-                        value={lines[activeTab].deviceName}
-                        onChange={(e) => {
-                          const updated = [...lines];
+                      {lines[activeTab].serviceType === "MB" && (
+                        <DeviceMobile
+                          lines={lines}
+                          setLines={setLines}
+                          activeTab={activeTab}
+                        />
+                      )}
 
-                          updated[activeTab].deviceName = e.target.value;
-
-                          setLines(updated);
-                        }}
-                        className="
-            w-full
-            h-[40px]
-            rounded-xl
-            border
-            px-3
-            text-base
-            bg-white
-          "
-                      />
+                      {lines[activeTab].serviceType === "BB" && (
+                        <DeviceHome5G
+                          lines={lines}
+                          setLines={setLines}
+                          activeTab={activeTab}
+                        />
+                      )}
                     </div>
 
-                    <div>
+                    {!(
+                      lines[activeTab].serviceType === "BB" &&
+                      lines[activeTab].contractType === "ドコモ光"
+                    ) && (
+                      <div>
+                        <div
+                          className="
+        mb-1
+        text-base
+        font-bold
+      "
+                        >
+                          端末価格（頭金込み）
+                        </div>
+
+                        <input
+                          type="number"
+                          value={
+                            lines[activeTab].devicePrice === 0
+                              ? ""
+                              : lines[activeTab].devicePrice
+                          }
+                          onChange={(e) => {
+                            const updated = [...lines];
+
+                            updated[activeTab].devicePrice =
+                              e.target.value === ""
+                                ? 0
+                                : Number(e.target.value);
+
+                            setLines(updated);
+                          }}
+                          className="
+        w-full
+        h-[44px]
+        rounded-xl
+        border
+        px-4
+        text-base
+        bg-white
+      "
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              {lines[activeTab].serviceType === "BB" &&
+                lines[activeTab].contractType === "ドコモ光" && (
+                  <>
+                    <div className="mt-4">
                       <div
                         className="
-          mb-1
-          text-base
-          font-bold
-        "
+            mb-1
+            text-base
+            font-bold
+          "
                       >
-                        端末価格（頭金込み）
+                        工事費用
                       </div>
 
                       <input
                         type="number"
                         value={
-                          lines[activeTab].devicePrice === 0
+                          lines[activeTab].constructionFee === 0
                             ? ""
-                            : lines[activeTab].devicePrice
+                            : lines[activeTab].constructionFee
                         }
                         onChange={(e) => {
                           const updated = [...lines];
 
-                          updated[activeTab].devicePrice =
+                          updated[activeTab].constructionFee =
                             e.target.value === "" ? 0 : Number(e.target.value);
 
                           setLines(updated);
@@ -1060,11 +1311,53 @@ export default function App() {
           "
                       />
                     </div>
+
+                    <div className="mt-4">
+                      <div
+                        className="
+            mb-1
+            text-base
+            font-bold
+          "
+                      >
+                        分割回数
+                      </div>
+
+                      <select
+                        value={lines[activeTab].constructionInstallment}
+                        onChange={(e) => {
+                          const updated = [...lines];
+
+                          updated[activeTab].constructionInstallment = Number(
+                            e.target.value,
+                          );
+
+                          setLines(updated);
+                        }}
+                        className="
+            w-full
+            h-[44px]
+            rounded-xl
+            border
+            px-4
+            text-base
+            bg-white
+          "
+                      >
+                        <option value={1}>一括</option>
+                        <option value={12}>12回</option>
+                        <option value={24}>24回</option>
+                      </select>
+                    </div>
                   </>
                 )}
               {lines[activeTab].installment !== 0 &&
                 lines[activeTab].installment !== -1 &&
-                lines[activeTab].installment !== 1 && (
+                lines[activeTab].installment !== 1 &&
+                !(
+                  lines[activeTab].serviceType === "BB" &&
+                  lines[activeTab].contractType === "ドコモ光"
+                ) && (
                   <div>
                     <div
                       className="
@@ -1103,86 +1396,78 @@ export default function App() {
                     />
                   </div>
                 )}
-              <div>
-                <div
-                  className="
+              {!(
+                lines[activeTab].serviceType === "BB" &&
+                lines[activeTab].contractType === "ドコモ光"
+              ) && (
+                <div>
+                  <div
+                    className="
           mb-1
           text-base
           font-bold
         "
-                >
-                  分割回数
-                </div>
+                  >
+                    分割回数
+                  </div>
 
-                <select
-                  value={lines[activeTab].installment}
-                  onChange={(e) => {
-                    const updated = [...lines];
+                  {lines[activeTab].serviceType === "MB" ? (
+                    <InstallmentMobile
+                      lines={lines}
+                      setLines={setLines}
+                      activeTab={activeTab}
+                    />
+                  ) : lines[activeTab].contractType === "Home 5G" ? (
+                    <InstallmentHome5G
+                      lines={lines}
+                      setLines={setLines}
+                      activeTab={activeTab}
+                    />
+                  ) : (
+                    <InstallmentHikari
+                      lines={lines}
+                      setLines={setLines}
+                      activeTab={activeTab}
+                    />
+                  )}
 
-                    updated[activeTab].installment = Number(e.target.value);
-
-                    setLines(updated);
-                  }}
-                  className="
-            w-full
-            h-[44px]
-            rounded-xl
-            border
-            px-4
-            text-base
-            bg-white
-          "
-                >
-                  <option value={0}>プラン変更</option>
-
-                  <option value={-1}>SIM契約</option>
-
-                  <option value={1}>一括購入</option>
-
-                  <option value={12}>12回</option>
-
-                  <option value={24}>24回</option>
-
-                  <option value={36}>36回</option>
-
-                  <option value={23}>カエドキ分割(48回)</option>
-                </select>
-
-                {isKaedoki && (
-                  <div
-                    className="
+                  {isKaedoki && (
+                    <div
+                      className="
   space-y-1
 "
-                  >
-                    {/* 1〜23回 */}
+                    >
+                      {/* 1〜23回 */}
 
-                    <div>
-                      <div
-                        className="
+                      <div>
+                        <div
+                          className="
         mb-1
         text-sm
         font-bold
       "
-                      >
-                        分割支払い （1〜23か月）
-                      </div>
+                        >
+                          分割支払い （1〜23か月）
+                        </div>
 
-                      <input
-                        type="number"
-                        value={
-                          lines[activeTab].firstPayment === 0
-                            ? ""
-                            : lines[activeTab].firstPayment
-                        }
-                        onChange={(e) => {
-                          const updated = [...lines];
+                        <input
+                          type="number"
+                          value={
+                            lines[activeTab].firstPayment === 0
+                              ? ""
+                              : lines[activeTab].firstPayment
+                          }
+                          onChange={(e) => {
+                            const updated = [...lines];
 
-                          updated[activeTab].firstPayment =
-                            e.target.value === "" ? 0 : Number(e.target.value);
+                            updated[activeTab].firstPayment =
+                              e.target.value === ""
+                                ? 0
+                                : Number(e.target.value);
 
-                          setLines(updated);
-                        }}
-                        className="
+                            setLines(updated);
+                          }}
+                          className="
           w-full
           h-[44px]
           rounded-xl
@@ -1191,38 +1476,40 @@ export default function App() {
           text-sm
           bg-white
         "
-                      />
-                    </div>
+                        />
+                      </div>
 
-                    {/* 残価 */}
+                      {/* 残価 */}
 
-                    <div>
-                      <div
-                        className="
+                      <div>
+                        <div
+                          className="
         mb-1
         text-sm
         font-bold
       "
-                      >
-                        残価
-                      </div>
+                        >
+                          残価
+                        </div>
 
-                      <input
-                        type="number"
-                        value={
-                          lines[activeTab].residualPrice === 0
-                            ? ""
-                            : lines[activeTab].residualPrice
-                        }
-                        onChange={(e) => {
-                          const updated = [...lines];
+                        <input
+                          type="number"
+                          value={
+                            lines[activeTab].residualPrice === 0
+                              ? ""
+                              : lines[activeTab].residualPrice
+                          }
+                          onChange={(e) => {
+                            const updated = [...lines];
 
-                          updated[activeTab].residualPrice =
-                            e.target.value === "" ? 0 : Number(e.target.value);
+                            updated[activeTab].residualPrice =
+                              e.target.value === ""
+                                ? 0
+                                : Number(e.target.value);
 
-                          setLines(updated);
-                        }}
-                        className="
+                            setLines(updated);
+                          }}
+                          className="
           w-full
           h-[44px]
           rounded-xl
@@ -1231,38 +1518,40 @@ export default function App() {
           text-sm
           bg-white
         "
-                      />
-                    </div>
+                        />
+                      </div>
 
-                    {/* 24〜48回 */}
+                      {/* 24〜48回 */}
 
-                    <div>
-                      <div
-                        className="
+                      <div>
+                        <div
+                          className="
         mb-1
         text-sm
         font-bold
       "
-                      >
-                        再分割支払い （24〜48か月）
-                      </div>
+                        >
+                          再分割支払い （24〜48か月）
+                        </div>
 
-                      <input
-                        type="number"
-                        value={
-                          lines[activeTab].secondPayment === 0
-                            ? ""
-                            : lines[activeTab].secondPayment
-                        }
-                        onChange={(e) => {
-                          const updated = [...lines];
+                        <input
+                          type="number"
+                          value={
+                            lines[activeTab].secondPayment === 0
+                              ? ""
+                              : lines[activeTab].secondPayment
+                          }
+                          onChange={(e) => {
+                            const updated = [...lines];
 
-                          updated[activeTab].secondPayment =
-                            e.target.value === "" ? 0 : Number(e.target.value);
+                            updated[activeTab].secondPayment =
+                              e.target.value === ""
+                                ? 0
+                                : Number(e.target.value);
 
-                          setLines(updated);
-                        }}
-                        className="
+                            setLines(updated);
+                          }}
+                          className="
           w-full
           h-[44px]
           rounded-xl
@@ -1271,11 +1560,12 @@ export default function App() {
           text-sm
           bg-white
         "
-                      />
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1389,53 +1679,59 @@ export default function App() {
                 >
                   料金プラン
                 </div>
+                {lines[activeTab].serviceType === "MB" ? (
+                  <select
+                    value={lines[activeTab].selectedPlan.name}
+                    onChange={(e) => {
+                      const found = plans.find(
+                        (plan) => plan.name === e.target.value,
+                      );
 
-                <select
-                  value={lines[activeTab].selectedPlan.name}
-                  onChange={(e) => {
-                    const found = plans.find(
-                      (plan) => plan.name === e.target.value,
-                    );
+                      if (!found) return;
 
-                    if (!found) return;
+                      const updated = [...lines];
 
-                    const updated = [...lines];
+                      const currentPlan = updated[activeTab].selectedPlan.name;
 
-                    const currentPlan = updated[activeTab].selectedPlan.name;
+                      const wasCustom = currentPlan === "旧プラン・自由入力";
 
-                    const wasCustom = currentPlan === "旧プラン・自由入力";
+                      const willBeCustom = found.name === "旧プラン・自由入力";
 
-                    const willBeCustom = found.name === "旧プラン・自由入力";
-
-                    updated[activeTab].selectedPlan = found;
-
-                    if (!found.name.includes("ドコモmini")) {
-                      updated[activeTab].mailCarry = false;
-                    }
-
-                    if (found.name.includes("ドコモmini")) {
-                      updated[activeTab].longTermDiscount = "";
-                      updated[activeTab].familyDiscount = "";
-                      updated[activeTab].selectedDiscounts = [];
-                    }
-
-                    if (wasCustom !== willBeCustom) {
-                      updated[activeTab].mailCarry = false;
-
-                      updated[activeTab].selectedDiscounts = [];
+                      updated[activeTab].selectedPlan = found;
 
                       updated[activeTab].dcardDiscount = "";
-
+                      updated[activeTab].familyDiscount = "";
                       updated[activeTab].longTermDiscount = "";
-
-                      updated[activeTab].customOptions = [];
-
+                      updated[activeTab].selectedDiscounts = [];
                       updated[activeTab].customDiscounts = [];
-                    }
 
-                    setLines(updated);
-                  }}
-                  className="
+                      if (!found.name.includes("ドコモmini")) {
+                        updated[activeTab].mailCarry = false;
+                      }
+
+                      if (found.name.includes("ドコモmini")) {
+                        updated[activeTab].longTermDiscount = "";
+                        updated[activeTab].familyDiscount = "";
+                        updated[activeTab].selectedDiscounts = [];
+                      }
+
+                      if (wasCustom !== willBeCustom) {
+                        updated[activeTab].mailCarry = false;
+
+                        updated[activeTab].selectedDiscounts = [];
+
+                        updated[activeTab].dcardDiscount = "";
+
+                        updated[activeTab].longTermDiscount = "";
+
+                        updated[activeTab].customOptions = [];
+
+                        updated[activeTab].customDiscounts = [];
+                      }
+
+                      setLines(updated);
+                    }}
+                    className="
                     w-full
                     h-[44px]
                     rounded-xl
@@ -1444,13 +1740,27 @@ export default function App() {
                     text-base
                     bg-white
                   "
-                >
-                  {plans.map((plan) => (
-                    <option key={plan.name} value={plan.name}>
-                      {plan.name}
-                    </option>
-                  ))}
-                </select>
+                  >
+                    {plans.map((plan) => (
+                      <option key={plan.name} value={plan.name}>
+                        {plan.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : lines[activeTab].contractType === "Home 5G" ? (
+                  <PlanHome5G
+                    lines={lines}
+                    setLines={setLines}
+                    activeTab={activeTab}
+                  />
+                ) : (
+                  <PlanHikari
+                    lines={lines}
+                    setLines={setLines}
+                    activeTab={activeTab}
+                  />
+                )}
+
                 {isCustomPlan && (
                   <div className="mt-3 space-y-2">
                     <input
@@ -1588,114 +1898,31 @@ export default function App() {
   gap-3
 "
                 >
-                  {lines[activeTab].customOptions.map((option, index) => (
-                    <div
-                      key={index}
-                      className="
-                      flex
-                      items-center
-                      gap-2
-                    "
-                    >
-                      {/* 名前 */}
+                  {lines[activeTab].serviceType === "MB" && (
+                    <OptionMobile
+                      lines={lines}
+                      setLines={setLines}
+                      activeTab={activeTab}
+                    />
+                  )}
 
-                      <input
-                        type="text"
-                        placeholder="オプション名"
-                        value={option.name}
-                        onChange={(e) => {
-                          const updated = [...lines];
-
-                          updated[activeTab].customOptions[index].name =
-                            e.target.value;
-
-                          setLines(updated);
-                        }}
-                        className="
-            w-[130px]
-            h-[38px]
-            rounded-xl
-            border
-            px-3
-            text-sm
-          "
+                  {lines[activeTab].serviceType === "BB" &&
+                    lines[activeTab].contractType === "Home 5G" && (
+                      <OptionHome5G
+                        lines={lines}
+                        setLines={setLines}
+                        activeTab={activeTab}
                       />
+                    )}
 
-                      {/* 金額 */}
-
-                      <input
-                        type="number"
-                        placeholder="金額"
-                        value={option.price === 0 ? "" : option.price}
-                        onChange={(e) => {
-                          const updated = [...lines];
-
-                          updated[activeTab].customOptions[index].price =
-                            e.target.value === "" ? 0 : Number(e.target.value);
-
-                          setLines(updated);
-                        }}
-                        className="
-            w-[80px]
-            h-[38px]
-            rounded-xl
-            border
-            px-3
-            text-sm
-          "
+                  {lines[activeTab].serviceType === "BB" &&
+                    lines[activeTab].contractType === "ドコモ光" && (
+                      <OptionHikari
+                        lines={lines}
+                        setLines={setLines}
+                        activeTab={activeTab}
                       />
-                      <button
-                        onClick={() => {
-                          const updated = [...lines];
-
-                          updated[activeTab].customOptions = updated[
-                            activeTab
-                          ].customOptions.filter((_, i) => i !== index);
-
-                          setLines(updated);
-                        }}
-                        className="
-            w-[20px]
-            h-[20px]
-            rounded-xl
-            border
-            border-red-400
-            text-red-500
-            text-sm
-            font-bold
-            shrink-0
-          "
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* 追加ボタン */}
-
-                  <button
-                    onClick={() => {
-                      const updated = [...lines];
-
-                      updated[activeTab].customOptions.push({
-                        name: "",
-                        price: 0,
-                      });
-
-                      setLines(updated);
-                    }}
-                    className="
-      h-[38px]
-      rounded-xl
-      border
-      border-blue-500
-      text-blue-600
-      text-sm
-      font-bold
-    "
-                  >
-                    ＋ 項目を追加
-                  </button>
+                    )}
                 </div>
               </div>
             </div>
@@ -1765,305 +1992,32 @@ export default function App() {
         gap-4
       "
             >
-              {!isCustomPlan && (
-                <>
-                  {/* dカード割 */}
-                  <div>
-                    <div
-                      className="
-            mb-1
-            text-sm
-            font-bold
-          "
-                    >
-                      dカード支払割
-                    </div>
-
-                    <select
-                      value={lines[activeTab].dcardDiscount}
-                      onChange={(e) => {
-                        const updated = [...lines];
-
-                        updated[activeTab].dcardDiscount = e.target.value;
-
-                        setLines(updated);
-                      }}
-                      className="
-            w-full
-            h-[38px]
-            rounded-xl
-            border
-            px-3
-            text-sm
-          "
-                    >
-                      <option value="">選択なし</option>
-
-                      <option value="220">dカード（220円）</option>
-
-                      <option value="550">GOLD / PLATINUM（550円）</option>
-                    </select>
-                  </div>
-                  {/* 長期利用割 */}
-
-                  {!lines[activeTab].selectedPlan.name.includes(
-                    "ドコモmini",
-                  ) && (
-                    <div>
-                      <div
-                        className="
-        mb-1
-        text-sm
-        font-bold
-      "
-                      >
-                        長期利用割
-                      </div>
-
-                      <select
-                        value={lines[activeTab].longTermDiscount}
-                        onChange={(e) => {
-                          const updated = [...lines];
-
-                          updated[activeTab].longTermDiscount = e.target.value;
-
-                          setLines(updated);
-                        }}
-                        className="
-        w-full
-        h-[38px]
-        rounded-xl
-        border
-        px-3
-        text-sm
-      "
-                      >
-                        <option value="">選択なし</option>
-
-                        <option value="110">10年以上（110円）</option>
-
-                        <option value="220">20年以上（220円）</option>
-                      </select>
-                    </div>
-                  )}
-                  {!lines[activeTab].selectedPlan.name.includes(
-                    "ドコモmini",
-                  ) && (
-                    <div>
-                      <div
-                        className="
-      mb-1
-      text-sm
-      font-bold
-    "
-                      >
-                        みんなドコモ割
-                      </div>
-
-                      <select
-                        value={lines[activeTab].familyDiscount}
-                        onChange={(e) => {
-                          const updated = [...lines];
-
-                          updated[activeTab].familyDiscount = e.target.value;
-
-                          setLines(updated);
-                        }}
-                        className="
-      w-full
-      h-[38px]
-      rounded-xl
-      border
-      px-3
-      text-sm
-    "
-                      >
-                        <option value="">選択なし</option>
-
-                        <option value="550">2回線（550円）</option>
-
-                        <option value="1210">3回線以上（1,210円）</option>
-                      </select>
-                    </div>
-                  )}
-                  {/* 固定割引 */}
-                  {(
-                    discountsByPlan[lines[activeTab].selectedPlan.name] || []
-                  ).map((discount: { name: string; price: number }) => (
-                    <label
-                      key={discount.name}
-                      className="
-              flex
-              items-center
-              justify-between
-            "
-                    >
-                      <div
-                        className="
-                flex
-                items-center
-                gap-4
-              "
-                      >
-                        <input
-                          type="checkbox"
-                          className="
-                  w-5
-                  h-5
-                "
-                          checked={lines[activeTab].selectedDiscounts.includes(
-                            discount.name,
-                          )}
-                          onChange={(e) => {
-                            const updated = [...lines];
-
-                            if (e.target.checked) {
-                              updated[activeTab].selectedDiscounts = [
-                                ...updated[activeTab].selectedDiscounts,
-
-                                discount.name,
-                              ];
-                            } else {
-                              updated[activeTab].selectedDiscounts = updated[
-                                activeTab
-                              ].selectedDiscounts.filter(
-                                (name) => name !== discount.name,
-                              );
-                            }
-
-                            setLines(updated);
-                          }}
-                        />
-
-                        <div className="text-sm">{discount.name}</div>
-                      </div>
-
-                      <div
-                        className="
-                text-xl
-                font-bold
-                text-green-700
-              "
-                      >
-                        -¥
-                        {discount.price.toLocaleString()}
-                      </div>
-                    </label>
-                  ))}
-                </>
+              {lines[activeTab].serviceType === "MB" && (
+                <DiscountMobile
+                  lines={lines}
+                  setLines={setLines}
+                  activeTab={activeTab}
+                />
               )}
+              {lines[activeTab].serviceType === "BB" &&
+                lines[activeTab].contractType === "Home 5G" && (
+                  <DiscountHome5G
+                    lines={lines}
+                    setLines={setLines}
+                    activeTab={activeTab}
+                  />
+                )}
+
+              {lines[activeTab].serviceType === "BB" &&
+                lines[activeTab].contractType === "ドコモ光" && (
+                  <DiscountHikari
+                    lines={lines}
+                    setLines={setLines}
+                    activeTab={activeTab}
+                  />
+                )}
+
               {/* カスタム割引 */}
-              {lines[activeTab].customDiscounts.map((discount, index) => (
-                <div
-                  key={index}
-                  className="
-              flex
-              gap-2
-            "
-                >
-                  <input
-                    type="text"
-                    placeholder="割引名"
-                    value={discount.name}
-                    onChange={(e) => {
-                      const updated = [...lines];
-
-                      updated[activeTab].customDiscounts[index].name =
-                        e.target.value;
-
-                      setLines(updated);
-                    }}
-                    className="
-                w-[130px]
-                h-[38px]
-                rounded-xl
-                border
-                px-3
-                text-sm
-              "
-                  />
-
-                  <input
-                    type="number"
-                    placeholder="金額"
-                    value={discount.price === 0 ? "" : discount.price}
-                    onChange={(e) => {
-                      const updated = [...lines];
-
-                      updated[activeTab].customDiscounts[index].price =
-                        e.target.value === "" ? 0 : Number(e.target.value);
-
-                      setLines(updated);
-                    }}
-                    className="
-                w-[80px]
-                h-[38px]
-                rounded-xl
-                border
-                px-3
-                text-sm
-              "
-                  />
-
-                  <button
-                    onClick={() => {
-                      const updated = [...lines];
-
-                      updated[activeTab].customDiscounts = updated[
-                        activeTab
-                      ].customDiscounts.filter((_, i) => i !== index);
-
-                      setLines(updated);
-                    }}
-                    className="
-                ml-1    
-                w-[20px]
-                h-[20px]
-                rounded-xl
-                border
-                border-red-400
-                text-red-500
-                text-sm
-                font-bold
-                shrink-0
-
-                flex
-                items-center
-                justify-center
-              "
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => {
-                  const updated = [...lines];
-
-                  updated[activeTab].customDiscounts.push({
-                    name: "",
-                    price: 0,
-                  });
-
-                  setLines(updated);
-                }}
-                className="
-          w-full
-          h-[44px]
-          rounded-xl
-          border
-          border-green-600
-          text-green-700
-          text-base
-          font-bold
-
-          flex
-          items-center
-          justify-center
-        "
-              >
-                ＋ 項目を追加
-              </button>
             </div>
           </div>
 
@@ -2119,7 +2073,9 @@ export default function App() {
                 text-gray-600
               "
               >
-                手数料・付属品
+                {lines[activeTab].serviceType === "MB"
+                  ? "手数料・付属品"
+                  : "手数料・工事費"}
               </div>
             </div>
 
@@ -2131,116 +2087,11 @@ export default function App() {
               gap-8
             "
             >
-              {lines[activeTab].customFees.map((fee, index) => (
-                <div
-                  key={index}
-                  className="
-        flex
-        gap-2
-      "
-                >
-                  <input
-                    type="text"
-                    placeholder="項目名"
-                    value={fee.name}
-                    onChange={(e) => {
-                      const updated = [...lines];
-
-                      updated[activeTab].customFees[index].name =
-                        e.target.value;
-
-                      setLines(updated);
-                    }}
-                    className="
-          w-[120px]
-          h-[38px]
-          rounded-xl
-          border
-          px-3
-          text-sm
-        "
-                  />
-
-                  <input
-                    type="number"
-                    placeholder="金額"
-                    value={fee.price === 0 ? "" : fee.price}
-                    onChange={(e) => {
-                      const updated = [...lines];
-
-                      updated[activeTab].customFees[index].price =
-                        e.target.value === "" ? 0 : Number(e.target.value);
-
-                      setLines(updated);
-                    }}
-                    className="
-          w-[80px]
-          h-[38px]
-          rounded-xl
-          border
-          px-3
-          text-sm
-        "
-                  />
-
-                  <button
-                    onClick={() => {
-                      const updated = [...lines];
-
-                      updated[activeTab].customFees = updated[
-                        activeTab
-                      ].customFees.filter((_, i) => i !== index);
-
-                      setLines(updated);
-                    }}
-                    className="
-          w-[20px]
-          h-[20px]
-          rounded-xl
-          border
-          border-red-400
-          text-red-500
-          text-sm
-          font-bold
-
-          flex
-          items-center
-          justify-center
-        "
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-
-              <button
-                onClick={() => {
-                  const updated = [...lines];
-
-                  updated[activeTab].customFees.push({
-                    name: "",
-                    price: 0,
-                  });
-
-                  setLines(updated);
-                }}
-                className="
-    w-full
-    h-[44px]
-    rounded-xl
-    border
-    border-gray-500
-    text-gray-700
-    text-base
-    font-bold
-
-    flex
-    items-center
-    justify-center
-  "
-              >
-                ＋ 項目を追加
-              </button>
+              <FeeSection
+                lines={lines}
+                setLines={setLines}
+                activeTab={activeTab}
+              />
             </div>
           </div>
 
@@ -2265,29 +2116,11 @@ export default function App() {
               合計
             </div>
 
-            {isKaedoki ? (
-              <div className="flex flex-col items-end">
-                <div className="w-[260px] text-left text-2xl font-black text-purple-700">
-                  ¥{grandTotal.toLocaleString()}
-                  <span className="ml-2 text-xs font-bold">（1〜23回）</span>
-                </div>
-
-                <div className="w-[260px] text-left text-2xl font-black text-purple-700">
-                  ¥{grandTotalSecond.toLocaleString()}
-                  <span className="ml-2 text-xs font-bold">（24〜48回）</span>
-                </div>
-              </div>
-            ) : (
-              <div
-                className="
-      text-4xl
-      font-black
-      text-purple-700
-    "
-              >
-                ¥{grandTotal.toLocaleString()}
-              </div>
-            )}
+            <GrandTotal
+              isKaedoki={isKaedoki}
+              grandTotal={grandTotal}
+              grandTotalSecond={grandTotalSecond}
+            />
           </div>
         </div>
       </div>
