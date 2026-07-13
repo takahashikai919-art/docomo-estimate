@@ -21,7 +21,9 @@ export default function DiscountHome5G({
         <div>
           <div className="text-sm font-bold">月々サポート</div>
 
-          <div className="mt-1 text-xs text-red-600">※初月は1,585円割引</div>
+          <div className="mt-1 text-xs text-red-600">
+            ※初月は1,585円割引となります
+          </div>
         </div>
 
         <div

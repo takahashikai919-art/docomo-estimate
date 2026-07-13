@@ -353,7 +353,7 @@ p-3
 
                       {discount.name === "月々サポート" && (
                         <div className="mt-1 text-xs text-red-600">
-                          ※初回のみ1,585円割引
+                          ※初回のみ1,585円割引となります
                         </div>
                       )}
                     </td>

@@ -43,13 +43,13 @@ export default function InstallmentHome5G({
 
       {lines[activeTab].installment === 48 && (
         <div className="mt-1 text-xs text-red-600">
-          初回のみ1,538円のお支払いとなります
+          ※初回のみ1,538円のお支払いとなります
         </div>
       )}
 
       {lines[activeTab].installment === 24 && (
         <div className="mt-1 text-xs text-red-600">
-          初回のみ3,064円のお支払いとなります
+          ※初回のみ3,064円のお支払いとなります
         </div>
       )}
     </>
