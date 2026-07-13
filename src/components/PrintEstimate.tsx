@@ -78,7 +78,7 @@ export default function PrintEstimate({
   showButtons = true,
   onClose,
 }: Props) {
-  const isNoDevice = installment === 0;
+  const isNoDevice = installment === 0 || installment === -1;
   const isLumpSum = installment === 1;
 
   const displayOptions = [
@@ -367,19 +367,27 @@ p-3
                 <tr>
                   <td className="border border-r p-3 align-top">
                     <div className="font-bold">
-                      {serviceType === "MB" ? "機種情報" : "契約情報"}
+                      {serviceType === "MB"
+                        ? "◇機種代金"
+                        : deviceName === "ドコモ光"
+                          ? "◇ドコモ光工事費"
+                          : "◇機種代金"}
                     </div>
                   </td>
 
                   <td colSpan={2} className="border p-2">
-                    機種購入なし
+                    {installment === -1 ? "SIMのみ契約" : "機種購入なし"}
                   </td>
                 </tr>
               ) : isLumpSum ? (
                 <tr>
                   <td className="border border-r p-3 align-top">
                     <div className="font-bold">
-                      {serviceType === "MB" ? "機種情報" : "契約情報"}
+                      {serviceType === "MB"
+                        ? "◇機種代金"
+                        : deviceName === "ドコモ光"
+                          ? "◇ドコモ光工事費"
+                          : "◇機種代金"}
                     </div>
 
                     <div className="mt-4">¥{devicePrice.toLocaleString()}</div>
